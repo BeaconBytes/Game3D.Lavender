@@ -1,0 +1,60 @@
+[gd_scene load_steps=9 format=3 uid="uid://b2dbsktss3omn"]
+
+[ext_resource type="Script" path="res://Code/Common/Entity/Variants/DevEntity.cs" id="1_c2fkl"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_a146v"]
+albedo_color = Color(0.733333, 0.533333, 0, 1)
+
+[sub_resource type="SphereMesh" id="SphereMesh_wq85r"]
+material = SubResource("StandardMaterial3D_a146v")
+radius = 0.4
+height = 0.33
+radial_segments = 14
+rings = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_m2ife"]
+albedo_color = Color(0.733333, 0.533333, 0, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_7s5p8"]
+material = SubResource("StandardMaterial3D_m2ife")
+radius = 0.025
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sb6x5"]
+albedo_color = Color(0.733333, 0.533333, 0, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_bjf7t"]
+material = SubResource("StandardMaterial3D_sb6x5")
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_edj41"]
+
+[node name="dev_entity" type="CharacterBody3D" node_paths=PackedStringArray("_navAgent", "HeadNode", "ServerHiddenNodes")]
+script = ExtResource("1_c2fkl")
+_navAgent = NodePath("NavigationAgent3D")
+HeadNode = NodePath("MODEL/HEAD")
+ServerHiddenNodes = [NodePath("MODEL/HEAD/HeadMesh"), NodePath("MODEL/HEAD/NoseMesh"), NodePath("MODEL/BodyMesh")]
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+
+[node name="MODEL" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="HEAD" type="Node3D" parent="MODEL"]
+
+[node name="HeadMesh" type="MeshInstance3D" parent="MODEL/HEAD"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.10745, 0)
+mesh = SubResource("SphereMesh_wq85r")
+skeleton = NodePath("../..")
+
+[node name="NoseMesh" type="MeshInstance3D" parent="MODEL/HEAD"]
+transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 0.79416, 1.10745, 0)
+mesh = SubResource("CapsuleMesh_7s5p8")
+skeleton = NodePath("../..")
+
+[node name="BodyMesh" type="MeshInstance3D" parent="MODEL"]
+mesh = SubResource("CapsuleMesh_bjf7t")
+skeleton = NodePath("../..")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_edj41")

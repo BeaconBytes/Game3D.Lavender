@@ -1,0 +1,61 @@
+[gd_scene load_steps=9 format=3 uid="uid://c64gt0y6ivlvh"]
+
+[ext_resource type="Script" path="res://Code/Common/Managers/Variants/Map/KrakenMapManager.cs" id="1_clhib"]
+[ext_resource type="Texture2D" uid="uid://cfbpwwmx7hm0r" path="res://addons/kenney_prototype_textures/red/texture_02.png" id="2_gu2yj"]
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_2hjpb"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_o5n6l"]
+size = Vector3(15, 1, 15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ekxa3"]
+size = Vector3(15, 1, 15)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3tv2y"]
+size = Vector3(25, 1, 25)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_50djt"]
+albedo_texture = ExtResource("2_gu2yj")
+uv1_scale = Vector3(25, 25, 25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_eh4f4"]
+material = SubResource("StandardMaterial3D_50djt")
+size = Vector3(25, 1, 25)
+
+[node name="KrakenMap" type="Node3D" node_paths=PackedStringArray("_playerSpawnPoints")]
+script = ExtResource("1_clhib")
+_playerSpawnPoints = [NodePath("SpawnPoints/Node3D1")]
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_2hjpb")
+
+[node name="Bridge" type="Node3D" parent="NavigationRegion3D"]
+
+[node name="Roof" type="StaticBody3D" parent="NavigationRegion3D/Bridge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 6, 7)
+collision_layer = 513
+collision_mask = 513
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Bridge/Roof"]
+shape = SubResource("BoxShape3D_o5n6l")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/Bridge/Roof"]
+mesh = SubResource("BoxMesh_ekxa3")
+
+[node name="Floor" type="StaticBody3D" parent="NavigationRegion3D/Bridge"]
+collision_layer = 513
+collision_mask = 513
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NavigationRegion3D/Bridge/Floor"]
+shape = SubResource("BoxShape3D_3tv2y")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/Bridge/Floor"]
+mesh = SubResource("BoxMesh_eh4f4")
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="Node3D1" type="Node3D" parent="SpawnPoints"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1, -9)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.780911, 0.511685, -0.358269, 0.0652712, 0.503575, 0.861482, 0.621223, -0.696126, 0.359849, 0, 3.22717, 0)

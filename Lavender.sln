@@ -1,0 +1,27 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lavender", "Lavender.csproj", "{B491CFED-F003-4D35-B508-FB95352B35EF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiteNetLib", "..\..\GitHub\LiteNetLib-Godot\LiteNetLib\LiteNetLib.csproj", "{3261F280-4266-4821-89DF-146DE2557CDE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+	Debug|Any CPU = Debug|Any CPU
+	ExportDebug|Any CPU = ExportDebug|Any CPU
+	ExportRelease|Any CPU = ExportRelease|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B491CFED-F003-4D35-B508-FB95352B35EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B491CFED-F003-4D35-B508-FB95352B35EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B491CFED-F003-4D35-B508-FB95352B35EF}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+		{B491CFED-F003-4D35-B508-FB95352B35EF}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+		{B491CFED-F003-4D35-B508-FB95352B35EF}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{B491CFED-F003-4D35-B508-FB95352B35EF}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+		{3261F280-4266-4821-89DF-146DE2557CDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3261F280-4266-4821-89DF-146DE2557CDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3261F280-4266-4821-89DF-146DE2557CDE}.ExportDebug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3261F280-4266-4821-89DF-146DE2557CDE}.ExportDebug|Any CPU.Build.0 = Debug|Any CPU
+		{3261F280-4266-4821-89DF-146DE2557CDE}.ExportRelease|Any CPU.ActiveCfg = Debug|Any CPU
+		{3261F280-4266-4821-89DF-146DE2557CDE}.ExportRelease|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+EndGlobal

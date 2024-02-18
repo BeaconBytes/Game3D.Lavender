@@ -1,0 +1,206 @@
+﻿using Godot;
+using Lavender.Common.Entity.Data;
+using Lavender.Common.Enums.Entity;
+using Lavender.Common.Enums.Net;
+using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
+using Lavender.Common.Networking.Packets.Variants.Other;
+using Lavender.Common.Registers;
+
+namespace Lavender.Common.Entity.Variants;
+
+public partial class PlayerEntity : HumanoidEntity
+{
+    public override void _Ready()
+    {
+        base._Ready();
+
+        _pauseMenuRootNode.Visible = false;
+        SetControllerParent((uint)StaticNetId.Null);
+        if (Manager.IsClient)
+        {
+            Input.MouseMode = Input.MouseModeEnum.Captured;
+            if(Manager.ClientNetId == NetId)
+                SetControllerParent(NetId);
+            
+            Register.Packets.Subscribe<ForceSyncEntityPacket>(OnForceSyncEntityPacket);
+        }
+        else
+        {
+            Manager.SendPacketToClient(new ForceSyncEntityPacket()
+            {
+                CurrentTick = CurrentTick,
+                CurrentPos = GlobalPosition,
+                CurrentRotation = GetRotationWithHead(),
+            }, this);
+        }
+    }
+    public override void _Process(double delta)
+    {
+        base._Process(delta);
+		
+        HandleMovementInputs();
+		
+        if(Input.IsActionJustPressed("ui_cancel"))
+            Input.MouseMode = Input.MouseModeEnum.Visible;
+
+        if (Input.IsActionJustPressed("debug_action"))
+        {
+            Manager.SendPacketToServer(new DebugActionPacket()
+            {
+                Message = "debug",
+                Augment = 0,
+            });
+        }
+    }
+
+
+    
+    
+    
+    protected override void HandleTick()
+    {
+        base.HandleTick();
+        
+        if (Manager.IsClient)
+        {
+            if (!LatestServerState.Equals(default(StatePayload)) && 
+                (LastProcessedState.Equals(default(StatePayload)) || !LatestServerState.Equals(LastProcessedState)))
+            {
+                HandleServerReconciliation();
+            }
+
+            if (Manager.ClientNetId == NetId)
+            {
+                uint bufferIndex = CurrentTick % BUFFER_SIZE;
+		
+                InputPayload inputPayload = new()
+                {
+                    tick  = CurrentTick,
+                    moveInput = _moveInput,
+                    lookInput = _lookInput,
+                    flagsInput = _flagsInput,
+                };
+                _lookInput = Vector3.Zero;
+		
+                InputBuffer[bufferIndex] = inputPayload;
+                StateBuffer[bufferIndex] = ProcessMovement(inputPayload);
+        
+                _flagsInput = EntityMoveFlags.None;
+		
+                Manager.SendPacketToServer(new EntityInputPayloadPacket()
+                {
+                    NetId = NetId,
+                    InputPayload = inputPayload,
+                });
+            }
+            else
+            {
+                LastProcessedState = LatestServerState;
+                GlobalPosition = LatestServerState.position;
+                RotateHead(LatestServerState.rotation);
+            }
+        }
+        else
+        {
+            uint bufferIndex = 0;
+            bool foundBufferIndex = ( InputQueue.Count > 0 );
+            
+            while (InputQueue.Count > 0)
+            {
+                InputPayload inputPayload = InputQueue.Dequeue();
+                bufferIndex = inputPayload.tick % BUFFER_SIZE;
+
+                StatePayload statePayload = ProcessMovement(inputPayload);
+                StateBuffer[bufferIndex] = statePayload;
+            }
+
+            if (foundBufferIndex)
+            {
+                Manager.BroadcastPacketToClients(new EntityStatePayloadPacket()
+                {
+                    NetId = NetId,
+                    StatePayload = StateBuffer[bufferIndex],
+                });
+            }
+        }
+        
+    }
+    protected virtual void HandleMovementInputs()
+    {
+        _moveInput = Vector3.Zero;
+		
+        if (Input.IsActionPressed("move_forward"))
+            _moveInput.Z = -1f;
+        else if (Input.IsActionPressed("move_backward"))
+            _moveInput.Z = 1f;
+        if (Input.IsActionPressed("move_left"))
+            _moveInput.X = -1f;
+        else if (Input.IsActionPressed("move_right"))
+            _moveInput.X = 1f;
+
+        if (Input.IsActionJustPressed("move_jump"))
+            _flagsInput |= EntityMoveFlags.Jump;
+    }
+	
+    public override void _UnhandledInput( InputEvent @event )
+    {
+		
+        if ( @event is InputEventMouseMotion eventMouseMotion )
+        {
+            if (!_isPaused)
+            {
+                _lookInput.X += (-eventMouseMotion.Relative.X * _mouseSensitivity);
+                _lookInput.Y += (-eventMouseMotion.Relative.Y * _mouseSensitivity);
+            }
+        }
+    }
+
+    public void TogglePause(bool forcePaused = false)
+    {
+        _isPaused = !_isPaused;
+        if (forcePaused)
+            _isPaused = true;
+
+        if (_isPaused)
+        {
+            // Now paused
+            Input.MouseMode = Input.MouseModeEnum.Visible;
+            _pauseMenuRootNode.Visible = true;
+        }
+        else
+        {
+            // NOT paused anymore
+            Input.MouseMode = Input.MouseModeEnum.Captured;
+            _pauseMenuRootNode.Visible = false;
+        }
+    }
+    
+    
+    private void OnForceSyncEntityPacket(ForceSyncEntityPacket packet, uint sourceNetId)
+    {
+        if (packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
+            return;
+
+        CurrentTick = packet.CurrentTick;
+        GlobalPosition = packet.CurrentPos;
+        RotateHead(packet.CurrentRotation);
+    }
+    
+    
+    private bool _isCommonPlayerEntity = false;
+    public bool IsClientHostEnvironment { get; private set; } = false;
+
+    private bool _isPaused = false;
+    private float _mouseSensitivity = 0.4f;
+
+    [Export]
+    private Control _pauseMenuRootNode;
+
+    [Export]
+    private Camera3D _camera;
+
+	
+    private Vector3 _lookInput = Vector3.Zero;
+    private Vector3 _moveInput = Vector3.Zero;
+    private EntityMoveFlags _flagsInput = EntityMoveFlags.None;
+}

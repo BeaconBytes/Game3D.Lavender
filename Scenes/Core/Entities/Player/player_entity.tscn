@@ -1,0 +1,86 @@
+[gd_scene load_steps=8 format=3 uid="uid://csj5qrlx4w0ea"]
+
+[ext_resource type="Script" path="res://Code/Common/Entity/Variants/PlayerEntity.cs" id="1_r05bv"]
+[ext_resource type="Theme" uid="uid://t24udtnrkd2d" path="res://Assets/Themes/menu.theme" id="2_yva6r"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_kjedo"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_i48xe"]
+size = Vector3(0.5, 0.5, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_7y3yk"]
+size = Vector3(0.25, 0.25, 1.5)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_fxi5x"]
+height = 1.4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1rcej"]
+bg_color = Color(0.819608, 0.34902, 0.988235, 0.0705882)
+
+[node name="PlayerEntity" type="CharacterBody3D" node_paths=PackedStringArray("_pauseMenuRootNode", "_camera", "HeadNode", "ServerHiddenNodes")]
+collision_layer = 0
+collision_mask = 0
+platform_floor_layers = 0
+script = ExtResource("1_r05bv")
+_pauseMenuRootNode = NodePath("PauseMenuRoot")
+_camera = NodePath("Head/Camera3D")
+HeadNode = NodePath("Head")
+ServerHiddenNodes = [NodePath("Head/Camera3D"), NodePath("Head/MeshInstance3D"), NodePath("Head/Eyes/MeshInstance3D"), NodePath("Body/MeshInstance3D"), null]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_kjedo")
+
+[node name="Head" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0)
+
+[node name="Camera3D" type="Camera3D" parent="Head"]
+current = true
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Head"]
+mesh = SubResource("BoxMesh_i48xe")
+
+[node name="Eyes" type="Node3D" parent="Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Head/Eyes"]
+mesh = SubResource("BoxMesh_7y3yk")
+
+[node name="Body" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Body"]
+mesh = SubResource("CylinderMesh_fxi5x")
+skeleton = NodePath("../../..")
+
+[node name="PauseMenuRoot" type="Control" parent="."]
+layout_mode = 3
+anchor_right = 1.38889
+anchor_bottom = 1.38889
+offset_bottom = 6.10352e-05
+metadata/_edit_use_anchors_ = true
+
+[node name="BackgroundPanel" type="Panel" parent="PauseMenuRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1rcej")
+
+[node name="Label" type="Label" parent="PauseMenuRoot"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 23.0
+grow_horizontal = 2
+theme = ExtResource("2_yva6r")
+theme_type_variation = &"HeaderLarge"
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 72
+text = "PAUSED"
+uppercase = true

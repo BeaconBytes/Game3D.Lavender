@@ -1,0 +1,101 @@
+[gd_scene load_steps=8 format=3 uid="uid://25c0r02xfh2b"]
+
+[ext_resource type="Script" path="res://Code/Client/Menus/LoadupMenuSelection.cs" id="1_717cj"]
+[ext_resource type="Theme" uid="uid://t24udtnrkd2d" path="res://Assets/Themes/menu.theme" id="2_pfm4i"]
+[ext_resource type="FontFile" uid="uid://dvxf68mtns1et" path="res://Assets/Fonts/Raw/FiraSans/FiraSans-Bold.ttf" id="3_hk32y"]
+[ext_resource type="FontVariation" uid="uid://cjvx5sfopb77m" path="res://Assets/Fonts/FiraSans/firasans_font.tres" id="4_1pme8"]
+[ext_resource type="FontVariation" uid="uid://dm5nm4q45secc" path="res://Assets/Fonts/FiraSans/firasans_bold_font.tres" id="4_014ji"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_kxoh7"]
+font = ExtResource("3_hk32y")
+font_size = 128
+font_color = Color(0.501961, 0.290196, 0.756863, 1)
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 0
+
+[sub_resource type="LabelSettings" id="LabelSettings_22qum"]
+font = ExtResource("4_1pme8")
+font_size = 64
+font_color = Color(0.337255, 0.67451, 0.831373, 1)
+outline_size = 10
+outline_color = Color(0, 0, 0, 1)
+
+[node name="LoadupMenuSelection" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_717cj")
+
+[node name="BackgroundPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_pfm4i")
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.413194
+anchor_bottom = 0.242284
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 474.0
+offset_bottom = 134.0
+metadata/_edit_use_anchors_ = true
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "Coconut"
+label_settings = SubResource("LabelSettings_kxoh7")
+
+[node name="TitleLabel2" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+text = "by Stimz"
+label_settings = SubResource("LabelSettings_22qum")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 300.0
+offset_right = 530.0
+offset_bottom = 594.0
+
+[node name="JoinButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_014ji")
+theme_override_font_sizes/font_size = 64
+text = "JOIN"
+flat = true
+alignment = 0
+
+[node name="SingleplayerButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_014ji")
+theme_override_font_sizes/font_size = 64
+disabled = true
+text = "SINGLEPLAYER"
+flat = true
+alignment = 0
+
+[node name="BackButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_014ji")
+theme_override_font_sizes/font_size = 64
+text = "BACK"
+flat = true
+alignment = 0
+
+[connection signal="pressed" from="VBoxContainer/JoinButton" to="." method="OnJoinButtonPressed"]
+[connection signal="pressed" from="VBoxContainer/SingleplayerButton" to="." method="OnSinglePlayerButtonPressed"]
+[connection signal="pressed" from="VBoxContainer/BackButton" to="." method="OnBackButtonPressed"]

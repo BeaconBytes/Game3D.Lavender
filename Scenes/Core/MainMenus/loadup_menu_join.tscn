@@ -1,0 +1,106 @@
+[gd_scene load_steps=8 format=3 uid="uid://cmhdkucmr4m03"]
+
+[ext_resource type="Script" path="res://Code/Client/Menus/LoadupMenuJoin.cs" id="1_42xml"]
+[ext_resource type="Theme" uid="uid://t24udtnrkd2d" path="res://Assets/Themes/menu.theme" id="1_plo5j"]
+[ext_resource type="FontFile" uid="uid://dvxf68mtns1et" path="res://Assets/Fonts/Raw/FiraSans/FiraSans-Bold.ttf" id="2_ii2tc"]
+[ext_resource type="FontVariation" uid="uid://dm5nm4q45secc" path="res://Assets/Fonts/FiraSans/firasans_bold_font.tres" id="3_ob666"]
+[ext_resource type="FontVariation" uid="uid://cjvx5sfopb77m" path="res://Assets/Fonts/FiraSans/firasans_font.tres" id="4_q12jo"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_yqeqp"]
+font = ExtResource("2_ii2tc")
+font_size = 128
+font_color = Color(0.501961, 0.290196, 0.756863, 1)
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 0
+
+[sub_resource type="LabelSettings" id="LabelSettings_n8e8b"]
+font = ExtResource("4_q12jo")
+font_size = 64
+font_color = Color(0.337255, 0.67451, 0.831373, 1)
+outline_size = 10
+outline_color = Color(0, 0, 0, 1)
+
+[node name="LoadupMenuJoin" type="Control" node_paths=PackedStringArray("_ipAddressInputBox", "_joinButton", "_backButton")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_42xml")
+_ipAddressInputBox = NodePath("VBoxContainer/HBoxContainer/ipInputBox")
+_joinButton = NodePath("VBoxContainer/Connect")
+_backButton = NodePath("VBoxContainer/BackButton")
+
+[node name="BackgroundPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_plo5j")
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.413194
+anchor_bottom = 0.242284
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 474.0
+offset_bottom = 134.0
+metadata/_edit_use_anchors_ = true
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "Lavendar"
+label_settings = SubResource("LabelSettings_yqeqp")
+
+[node name="TitleLabel2" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+text = "by Stimz"
+label_settings = SubResource("LabelSettings_n8e8b")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 300.0
+offset_right = 800.0
+offset_bottom = 594.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+custom_minimum_size = Vector2(0, 75)
+layout_mode = 2
+
+[node name="ipInputBox" type="TextEdit" parent="VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(700, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "127.0.0.1"
+placeholder_text = "IP to join"
+
+[node name="Connect" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ob666")
+theme_override_font_sizes/font_size = 64
+text = "JOIN"
+flat = true
+alignment = 0
+
+[node name="BackButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ob666")
+theme_override_font_sizes/font_size = 64
+text = "BACK"
+flat = true
+alignment = 0
+
+[connection signal="text_changed" from="VBoxContainer/HBoxContainer/ipInputBox" to="." method="OnIPAddressBoxTextChanged"]
+[connection signal="pressed" from="VBoxContainer/Connect" to="." method="OnConnectButtonPressed"]
+[connection signal="pressed" from="VBoxContainer/BackButton" to="." method="OnBackButtonPressed"]

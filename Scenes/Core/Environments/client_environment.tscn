@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3 uid="uid://bpqk0qntnlrrs"]
+
+[ext_resource type="Script" path="res://Code/Client/Managers/ClientManager.cs" id="1_0ja6s"]
+[ext_resource type="FontVariation" uid="uid://dm5nm4q45secc" path="res://Assets/Fonts/FiraSans/firasans_bold_font.tres" id="1_1jybb"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_kr84n"]
+font = ExtResource("1_1jybb")
+font_size = 42
+outline_size = 2
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 0
+
+[node name="ClientEnv" type="Node"]
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+mouse_filter = 1
+
+[node name="Label" type="Label" parent="Control"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+text = "DEVELOPMENT BUILD"
+label_settings = SubResource("LabelSettings_kr84n")
+
+[node name="Manager" type="Node" parent="." node_paths=PackedStringArray("MapSocketNode")]
+script = ExtResource("1_0ja6s")
+MapSocketNode = NodePath("../MapSocket")
+
+[node name="MapSocket" type="Node" parent="."]

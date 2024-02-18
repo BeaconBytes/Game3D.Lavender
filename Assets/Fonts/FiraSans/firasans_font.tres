@@ -1,0 +1,6 @@
+[gd_resource type="FontVariation" load_steps=2 format=3 uid="uid://cjvx5sfopb77m"]
+
+[ext_resource type="FontFile" uid="uid://sg633bo0h3u1" path="res://Assets/Fonts/Raw/FiraSans/FiraSans-Regular.ttf" id="1_g13qn"]
+
+[resource]
+base_font = ExtResource("1_g13qn")

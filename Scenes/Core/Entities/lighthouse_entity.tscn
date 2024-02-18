@@ -1,0 +1,16 @@
+[gd_scene load_steps=3 format=3 uid="uid://y0cgtbq6myvu"]
+
+[ext_resource type="Script" path="res://Code/Common/Entity/Variants/LighthouseEntity.cs" id="1_7sacd"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_k4p85"]
+radius = 1.0
+
+[node name="LighthouseEntity" type="CharacterBody3D" node_paths=PackedStringArray("ServerHiddenNodes")]
+script = ExtResource("1_7sacd")
+ServerHiddenNodes = []
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_k4p85")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="."]
+size = Vector3(3, 3, 3)

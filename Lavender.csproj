@@ -1,0 +1,16 @@
+<Project Sdk="Godot.NET.Sdk/4.2.0">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\GitHub\LiteNetLib-Godot\LiteNetLib\LiteNetLib.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="addons\points_cloud\ui\" />
+    <Folder Include="Code\Common\Inventory\Items\Variants\" />
+  </ItemGroup>
+</Project>

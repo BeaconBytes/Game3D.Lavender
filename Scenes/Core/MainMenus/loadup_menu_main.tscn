@@ -1,0 +1,104 @@
+[gd_scene load_steps=9 format=3 uid="uid://bjrw028wycccd"]
+
+[ext_resource type="Theme" uid="uid://t24udtnrkd2d" path="res://Assets/Themes/menu.theme" id="1_feqvt"]
+[ext_resource type="Script" path="res://Code/Client/Menus/LoadupMenuMain.cs" id="2_g56xo"]
+[ext_resource type="FontFile" uid="uid://dvxf68mtns1et" path="res://Assets/Fonts/Raw/FiraSans/FiraSans-Bold.ttf" id="3_nk6mt"]
+[ext_resource type="FontVariation" uid="uid://cjvx5sfopb77m" path="res://Assets/Fonts/FiraSans/firasans_font.tres" id="4_l8yul"]
+[ext_resource type="FontVariation" uid="uid://dm5nm4q45secc" path="res://Assets/Fonts/FiraSans/firasans_bold_font.tres" id="4_ukuco"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_5ox5s"]
+font = ExtResource("3_nk6mt")
+font_size = 128
+font_color = Color(0.501961, 0.290196, 0.756863, 1)
+outline_size = 6
+outline_color = Color(0, 0, 0, 1)
+shadow_size = 0
+
+[sub_resource type="LabelSettings" id="LabelSettings_gbqtx"]
+font = ExtResource("4_l8yul")
+font_size = 64
+font_color = Color(0.337255, 0.67451, 0.831373, 1)
+outline_size = 10
+outline_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_gvlme"]
+skew = Vector2(0.165, 0)
+
+[node name="LoadupMenuMain" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_feqvt")
+script = ExtResource("2_g56xo")
+
+[node name="BackgroundPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_feqvt")
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.413194
+anchor_bottom = 0.242284
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 474.0
+offset_bottom = 134.0
+metadata/_edit_use_anchors_ = true
+
+[node name="TitleLabel" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "Coconut"
+label_settings = SubResource("LabelSettings_5ox5s")
+
+[node name="TitleLabel2" type="Label" parent="VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+text = "by Stimz"
+label_settings = SubResource("LabelSettings_gbqtx")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 300.0
+offset_right = 404.0
+offset_bottom = 594.0
+
+[node name="PlayButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_ukuco")
+theme_override_font_sizes/font_size = 64
+theme_override_styles/hover = SubResource("StyleBoxFlat_gvlme")
+text = "PLAY"
+flat = true
+alignment = 0
+
+[node name="OptionsButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_ukuco")
+theme_override_font_sizes/font_size = 64
+text = "OPTIONS"
+flat = true
+alignment = 0
+
+[node name="QuitButton" type="Button" parent="VBoxContainer"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("4_ukuco")
+theme_override_font_sizes/font_size = 64
+text = "QUIT"
+flat = true
+alignment = 0
+
+[connection signal="pressed" from="VBoxContainer/PlayButton" to="." method="OnPlayButtonPressed"]
+[connection signal="pressed" from="VBoxContainer/QuitButton" to="." method="OnQuitButtonPressed"]
