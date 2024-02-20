@@ -12,5 +12,6 @@
   <ItemGroup>
     <Folder Include="addons\points_cloud\ui\" />
     <Folder Include="Code\Common\Inventory\Items\Variants\" />
+    <Folder Include="Code\Common\Worlds\Blocks\Variants\" />
   </ItemGroup>
 </Project>

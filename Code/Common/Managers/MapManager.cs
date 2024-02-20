@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using Lavender.Common.Worlds;
 
 namespace Lavender.Common.Managers;
 
@@ -8,7 +9,8 @@ public partial class MapManager : LoadableNode
 	protected override void Load()
 	{
 		base.Load();
-		
+		MapWorld = new MapWorld();
+		AddChild(MapWorld);
 	}
 
 	public Vector3 GetRandomPlayerSpawnPoint()
@@ -24,4 +26,6 @@ public partial class MapManager : LoadableNode
 
 	[Export]
 	private Godot.Collections.Array<Node3D> _playerSpawnPoints;
+
+	public MapWorld MapWorld { get; protected set; }
 }
