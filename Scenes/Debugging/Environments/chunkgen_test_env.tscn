@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://cm3lnjn3nf4d3"]
+
+[ext_resource type="Script" path="res://Code/Common/Worlds/MapWorld.cs" id="1_4q32c"]
+[ext_resource type="PackedScene" uid="uid://c5g1v6dr15ct7" path="res://Scenes/Debugging/Entities/FreeFlyCharacter.tscn" id="1_7gpmx"]
+[ext_resource type="Material" uid="uid://7pkxrqc5u6dx" path="res://Assets/Textures/Dev/chunkmat.material" id="2_1p5fh"]
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_rkrqi"]
+radius = 3.0
+height = 24.0
+
+[node name="ChunkgenTestEnv" type="Node3D"]
+script = ExtResource("1_4q32c")
+ChunkMaterial = ExtResource("2_1p5fh")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_rkrqi")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.315827, 0.872462, -0.372912, -0.37151, 0.475359, 0.797505, 0.87306, -0.113333, 0.474259, 0, 0, 0)
+
+[node name="FreeFlyCharacter" parent="." instance=ExtResource("1_7gpmx")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.804978, 12.5011, 6.25811)
+motion_mode = 1
