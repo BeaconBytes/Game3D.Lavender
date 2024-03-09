@@ -7,16 +7,15 @@ namespace Lavender.Common.Worlds.Chunks;
 
 public partial class MapChunk : Node3D
 {
-    public void Setup(Vector2I chunkPosition, MapWorld mapWorld)
+    public void Setup(Vector3I chunkPosition, MapWorld mapWorld)
     {
         ChunkPosition = chunkPosition;
         
         _mapWorld = mapWorld;
-        ChunkSize = _mapWorld.ChunkSize;
 
         Noise.Seed = _mapWorld.WorldSeed;
         Noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
-        Noise.Offset = new Vector3(ChunkPosition.X * ChunkSize, ChunkPosition.Y * ChunkSize, 0);
+        Noise.Offset = new Vector3(ChunkPosition.X * _mapWorld.ChunkSize, ChunkPosition.Z * _mapWorld.ChunkSize, 0);
         
         GenerateBlocks();
         UpdateBlocks();
@@ -30,16 +29,19 @@ public partial class MapChunk : Node3D
             chunkMeshInstance = null;
         }
 
+        if (_isAllAir)
+            return;
+
         chunkMesh = new ArrayMesh();
         chunkMeshInstance = new MeshInstance3D();
         st.Begin(Mesh.PrimitiveType.Triangles);
         st.SetSmoothGroup(UInt32.MaxValue);
         
-        for (int x = 0; x < ChunkSize; x++)
+        for (int x = 0; x < _mapWorld.ChunkSize; x++)
         {
-            for (int y = 0; y < ChunkSize; y++)
+            for (int y = 0; y < _mapWorld.ChunkSize; y++)
             {
-                for (int z = 0; z < ChunkSize; z++)
+                for (int z = 0; z < _mapWorld.ChunkSize; z++)
                 {
                     CreateBlock(x, y, z);
                 }
@@ -57,29 +59,47 @@ public partial class MapChunk : Node3D
 
     public void GenerateBlocks()
     {
+        _isAllAir = true;
         _blocks = new MapWorld.BlockTypes[_mapWorld.ChunkSize, _mapWorld.ChunkSize, _mapWorld.ChunkSize];
 
+        int bedrockHeight = 2;
+        int stoneHeight = 48;
+        int dirtHeight = 60;
+        
         for (int j = 0; j < _blocks.GetLength(0); j++)
         {
-            for (int k = 0; k < _blocks.GetLength(1); k++)
+            for (int l = 0; l < _blocks.GetLength(2); l++)
             {
-                
-                for (int l = 0; l < _blocks.GetLength(2); l++)
+                int sampleY = Mathf.RoundToInt(Noise.GetNoise2D(j, l) * _mapWorld.WorldHeight);
+                for (int k = 0; k < _blocks.GetLength(1); k++)
                 {
+                    int globalHeightPos = (ChunkPosition.Y * _mapWorld.ChunkSize) + k;
+                    
                     MapWorld.BlockTypes blockType = MapWorld.BlockTypes.Air;
 
-                    if (k < 16)
-                        blockType = MapWorld.BlockTypes.Stone;
-                    else if (k < 31)
-                        blockType = MapWorld.BlockTypes.Dirt;
-                    else if (k == 31)
-                        blockType = MapWorld.BlockTypes.Grass;
-
+                    if (globalHeightPos <= bedrockHeight)
+                        blockType = MapWorld.BlockTypes.Bedrock;
+                    else if (globalHeightPos <= sampleY)
+                    {
+                        if (globalHeightPos < stoneHeight)
+                            blockType = MapWorld.BlockTypes.Stone;
+                        else if (globalHeightPos < dirtHeight)
+                            blockType = MapWorld.BlockTypes.Dirt;
+                        else if (globalHeightPos == sampleY)
+                            blockType = MapWorld.BlockTypes.Grass;
+                
+                        if (blockType != MapWorld.BlockTypes.Air)
+                            _isAllAir = false;
+                    }
+                    
                     _blocks[j, k, l] = blockType;
                 }
+                
             }
         }
     }
+
+    private bool _isAllAir = true;
 
     private void CreateBlock(int x, int y, int z)
     {
@@ -161,10 +181,8 @@ public partial class MapChunk : Node3D
     private static ushort[] _faceRight = new ushort[] { 3, 1, 5, 7 };
     private static ushort[] _faceFront = new ushort[] { 7, 5, 4, 6 };
     private static ushort[] _faceBack = new ushort[] { 2, 0, 1, 3 };
-    
 
-    public Vector2I ChunkPosition { get; private set; } = Vector2I.Zero;
-    public int ChunkSize { get; protected set; }
+    public Vector3I ChunkPosition { get; private set; } = Vector3I.Zero;
     
 
     public FastNoiseLite Noise { get; protected set; } = new();

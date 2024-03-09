@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://c5g1v6dr15ct7"]
+[gd_scene load_steps=4 format=3 uid="uid://c5g1v6dr15ct7"]
 
 [ext_resource type="Script" path="res://Code/Client/Dev/Debug/FreeFlightCharacter.cs" id="1_0cr4l"]
+[ext_resource type="Environment" uid="uid://bd5wpwv0at6fr" path="res://Assets/world_base_env.tres" id="2_g660y"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_x45wd"]
 height = 1.0
@@ -14,3 +15,4 @@ shape = SubResource("CapsuleShape3D_x45wd")
 disabled = true
 
 [node name="Camera3D" type="Camera3D" parent="."]
+environment = ExtResource("2_g660y")
