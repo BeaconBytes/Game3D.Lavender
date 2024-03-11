@@ -8,7 +8,8 @@ namespace Lavender.Common.Worlds;
 public partial class MapWorld : Node3D
 {
     public int ChunkSize { get; protected set; } = 32;
-    public int WorldHeight { get; protected set; } = 128;
+    public int WorldHeight { get; protected set; } = 64;
+    public float TerrainAmplitude = 8f;
     public int WorldSeed { get; protected set; } = 42069;
     public Vector2I ChunkAtlasSize { get; protected set; } = new(8, 3);
 
@@ -77,11 +78,11 @@ public partial class MapWorld : Node3D
 
         int maxYChunks = Mathf.RoundToInt(WorldHeight / (float)ChunkSize);
         
-        for (int x = -2; x <= 2; x++)
+        for (int x = -4; x <= 4; x++)
         {
             for (int y = 0; y <= maxYChunks; y++)
             {
-                for (int z = -2; z <= 2; z++)
+                for (int z = -4; z <= 4; z++)
                 {
                     CreateChunk(x, y, z);
                 }

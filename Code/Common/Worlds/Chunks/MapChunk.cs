@@ -16,6 +16,9 @@ public partial class MapChunk : Node3D
         Noise.Seed = _mapWorld.WorldSeed;
         Noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
         Noise.Offset = new Vector3(ChunkPosition.X * _mapWorld.ChunkSize, ChunkPosition.Z * _mapWorld.ChunkSize, 0);
+        Noise.FractalOctaves = 7;
+        Noise.FractalLacunarity = 0.33f;
+        Noise.Frequency = 0.033f;
         
         GenerateBlocks();
         UpdateBlocks();
@@ -62,15 +65,18 @@ public partial class MapChunk : Node3D
         _isAllAir = true;
         _blocks = new MapWorld.BlockTypes[_mapWorld.ChunkSize, _mapWorld.ChunkSize, _mapWorld.ChunkSize];
 
-        int bedrockHeight = 2;
-        int stoneHeight = 48;
-        int dirtHeight = 60;
+        int bedrockHeight = 0;
+        int stoneHeight = Mathf.RoundToInt(_mapWorld.TerrainAmplitude * 0.66f);
+        int dirtHeight = Mathf.RoundToInt(_mapWorld.TerrainAmplitude * 0.85f);
         
         for (int j = 0; j < _blocks.GetLength(0); j++)
         {
             for (int l = 0; l < _blocks.GetLength(2); l++)
             {
-                int sampleY = Mathf.RoundToInt(Noise.GetNoise2D(j, l) * _mapWorld.WorldHeight);
+
+                float resultHeight = ((Noise.GetNoise2D(j, l) + 1) / 2f) * _mapWorld.TerrainAmplitude;
+                int aproxHeight = Mathf.FloorToInt(resultHeight);
+                
                 for (int k = 0; k < _blocks.GetLength(1); k++)
                 {
                     int globalHeightPos = (ChunkPosition.Y * _mapWorld.ChunkSize) + k;
@@ -78,21 +84,28 @@ public partial class MapChunk : Node3D
                     MapWorld.BlockTypes blockType = MapWorld.BlockTypes.Air;
 
                     if (globalHeightPos <= bedrockHeight)
-                        blockType = MapWorld.BlockTypes.Bedrock;
-                    else if (globalHeightPos <= sampleY)
                     {
-                        if (globalHeightPos < stoneHeight)
-                            blockType = MapWorld.BlockTypes.Stone;
-                        else if (globalHeightPos < dirtHeight)
-                            blockType = MapWorld.BlockTypes.Dirt;
-                        else if (globalHeightPos == sampleY)
-                            blockType = MapWorld.BlockTypes.Grass;
-                
-                        if (blockType != MapWorld.BlockTypes.Air)
-                            _isAllAir = false;
+                        blockType = MapWorld.BlockTypes.Bedrock;
                     }
+                    else if (globalHeightPos <= resultHeight)
+                    {
+                        if (globalHeightPos <= stoneHeight)
+                            blockType = MapWorld.BlockTypes.Stone;
+                        else if (globalHeightPos <= dirtHeight)
+                            blockType = MapWorld.BlockTypes.Dirt;
+                        else if (globalHeightPos == aproxHeight)
+                            blockType = MapWorld.BlockTypes.Grass;
+                        else
+                            blockType = MapWorld.BlockTypes.Bedrock;
+                    }
+                
+                    if (blockType != MapWorld.BlockTypes.Air)
+                        _isAllAir = false;
                     
                     _blocks[j, k, l] = blockType;
+                    
+                    if (globalHeightPos > aproxHeight)
+                        break;
                 }
                 
             }
