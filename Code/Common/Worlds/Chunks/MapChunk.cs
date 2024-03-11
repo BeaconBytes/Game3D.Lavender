@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Godot;
+using Lavender.Common.Enums.Types;
 using Lavender.Common.Worlds.Blocks;
 
 namespace Lavender.Common.Worlds.Chunks;
@@ -21,10 +22,10 @@ public partial class MapChunk : Node3D
         Noise.Frequency = 0.033f;
         
         GenerateBlocks();
-        UpdateBlocks();
+        // DisplayBlocks();
     }
 
-    public void UpdateBlocks()
+    public void DisplayBlocks()
     {
         if (chunkMeshInstance != null)
         {
@@ -63,7 +64,7 @@ public partial class MapChunk : Node3D
     public void GenerateBlocks()
     {
         _isAllAir = true;
-        _blocks = new MapWorld.BlockTypes[_mapWorld.ChunkSize, _mapWorld.ChunkSize, _mapWorld.ChunkSize];
+        _blocks = new BlockType[_mapWorld.ChunkSize, _mapWorld.ChunkSize, _mapWorld.ChunkSize];
 
         int bedrockHeight = 0;
         int stoneHeight = Mathf.RoundToInt(_mapWorld.TerrainAmplitude * 0.66f);
@@ -81,31 +82,28 @@ public partial class MapChunk : Node3D
                 {
                     int globalHeightPos = (ChunkPosition.Y * _mapWorld.ChunkSize) + k;
                     
-                    MapWorld.BlockTypes blockType = MapWorld.BlockTypes.Air;
+                    BlockType blockType = BlockType.Air;
 
                     if (globalHeightPos <= bedrockHeight)
                     {
-                        blockType = MapWorld.BlockTypes.Bedrock;
+                        blockType = BlockType.Bedrock;
                     }
                     else if (globalHeightPos <= resultHeight)
                     {
                         if (globalHeightPos <= stoneHeight)
-                            blockType = MapWorld.BlockTypes.Stone;
+                            blockType = BlockType.Stone;
                         else if (globalHeightPos <= dirtHeight)
-                            blockType = MapWorld.BlockTypes.Dirt;
+                            blockType = BlockType.Dirt;
                         else if (globalHeightPos == aproxHeight)
-                            blockType = MapWorld.BlockTypes.Grass;
+                            blockType = BlockType.Grass;
                         else
-                            blockType = MapWorld.BlockTypes.Bedrock;
+                            blockType = BlockType.Bedrock;
                     }
                 
-                    if (blockType != MapWorld.BlockTypes.Air)
+                    if (blockType != BlockType.Air)
                         _isAllAir = false;
                     
                     _blocks[j, k, l] = blockType;
-                    
-                    if (globalHeightPos > aproxHeight)
-                        break;
                 }
                 
             }
@@ -116,8 +114,8 @@ public partial class MapChunk : Node3D
 
     private void CreateBlock(int x, int y, int z)
     {
-        MapWorld.BlockTypes blockType = _blocks[x, y, z];
-        if (blockType == MapWorld.BlockTypes.Air)
+        BlockType blockType = _blocks[x, y, z];
+        if (blockType == BlockType.Air)
             return;
 
         MapBlockType.TextureFaceData blockFaceData = _mapWorld.BlockReg[blockType].TextureData;
@@ -170,7 +168,45 @@ public partial class MapChunk : Node3D
             y >= 0 && y < chunkSize &&
             z >= 0 && z < chunkSize)
             return !(_mapWorld.BlockReg[_blocks[x, y, z]].IsSolid);
+        
+        // Need to check world pos to see if other chunks have air blocks around this block
+        int worldX = (ChunkPosition.X * chunkSize) + x;
+        int worldY = (ChunkPosition.Y * chunkSize) + y;
+        int worldZ = (ChunkPosition.Z * chunkSize) + z;
+
+        float worldSizeHalf = _mapWorld.WorldSize / 2f;
+        
+        if (worldX > -worldSizeHalf && worldX < worldSizeHalf &&
+            worldY >= 0 && worldY < _mapWorld.WorldHeight &&
+            worldZ > -worldSizeHalf && worldZ < worldSizeHalf)
+        {
+            return !(_mapWorld.BlockReg[_mapWorld.GetBlockAtPos(worldX, worldY, worldZ)].IsSolid);
+            // bool val = !(_mapWorld.BlockReg[_mapWorld.GetBlockAtPos(worldX, worldY, worldZ)].IsSolid);
+            // if (val)
+            //     throw new Exception("FOUND VAL");
+            // return val;
+        }
+        
         return true;
+    }
+
+    /// <summary>
+    /// Gets the blockType at given position in Local/Block coordinates
+    /// </summary>
+    public BlockType GetBlockTypeAtPos(int x, int y, int z)
+    {
+        if (!IsPosInBounds(x, y, z))
+            throw new Exception("GetBlockTypePos() @ OutOfBounds position given!");
+
+        return _blocks[x, y, z];
+    }
+
+    private bool IsPosInBounds(int x, int y, int z)
+    {
+        int chunkSize = _mapWorld.ChunkSize;
+        return (x >= 0 && x < chunkSize &&
+                y >= 0 && y < chunkSize &&
+                z >= 0 && z < chunkSize);
     }
 
     private SurfaceTool st = new SurfaceTool();
@@ -200,7 +236,7 @@ public partial class MapChunk : Node3D
 
     public FastNoiseLite Noise { get; protected set; } = new();
 
-    private MapWorld.BlockTypes[,,] _blocks;
+    private BlockType[,,] _blocks;
 
     private MapWorld _mapWorld;
 }
