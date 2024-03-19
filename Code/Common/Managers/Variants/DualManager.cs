@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using Lavender.Client.Managers;
 using Lavender.Server.Managers;
 
 namespace Lavender.Common.Managers.Variants;
 
-public partial class DualManager : GameManager
+public partial class DualManager : LoadableNode
 {
     protected override void Load()
     {

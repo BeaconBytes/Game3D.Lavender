@@ -28,7 +28,7 @@ public partial class LoadupMenuJoin : LoadableMenu
 		}
 		
 
-		if (Overseer.JoinServer(ipAddress, 8778))
+		if (EnvManager.JoinServer(ipAddress, 8778))
 		{
 			GD.Print("Attempting Join Server...");
 			_joining = true;
@@ -41,7 +41,7 @@ public partial class LoadupMenuJoin : LoadableMenu
 	private void OnBackButtonPressed()
 	{
 		if(!_joining)
-			Overseer.GotoScene(Register.SceneTable["loadup_menu_selection"]);
+			EnvManager.GotoScene(Register.SceneTable["loadup_menu_selection"]);
 	}
 
 	private void OnIPAddressBoxTextChanged()

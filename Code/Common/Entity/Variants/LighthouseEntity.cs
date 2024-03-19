@@ -1,5 +1,5 @@
 ﻿using Godot;
-using Lavender.Common.Globals;
+using Lavender.Common.Managers;
 using Lavender.Common.Utils;
 
 namespace Lavender.Common.Entity.Variants;
@@ -14,7 +14,7 @@ public partial class LighthouseEntity : FlyingBrainEntity
 
     protected override Vector3 DoAiMovementLogic()
     {
-        if(CurrentTick % (Overseer.SERVER_TICK_RATE * 0.5f) == 0)
+        if(CurrentTick % (EnvManager.SERVER_TICK_RATE * 0.5f) == 0)
         {
             if (_targetEntity is { Destroyed: true })
             {

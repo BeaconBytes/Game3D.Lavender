@@ -1,4 +1,6 @@
-﻿using Lavender.Common.Globals;
+﻿using System;
+using Lavender.Common.Exceptions;
+using Lavender.Common.Managers;
 
 namespace Lavender.Common.Menus;
 
@@ -6,8 +8,10 @@ public partial class LoadableMenu : LoadableNode
 {
     protected override void Load()
     {
-        Overseer = GetNode<Overseer>("/root/Overseer");
+        EnvManager = GetTree().CurrentScene.GetNode<EnvManager>("EnvManager");
+        if (EnvManager == null)
+            throw new BadNodeSetupException("EnvManager not found!");
     }
 
-    protected Overseer Overseer { get; private set; }
+    protected EnvManager EnvManager { get; private set; }
 }

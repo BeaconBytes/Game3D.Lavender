@@ -19,19 +19,25 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         NetId = netId;
         Manager = manager;
 
+        SetCollisionLayerValue(1, false);
+        SetCollisionLayerValue(8, false);
+
+        SetCollisionMaskValue(1, false);
+        SetCollisionMaskValue(8, false);
+        
         if (Manager is ClientManager)
         {
             IsClient = true;
             SetCollisionLayerValue(1, true);
             SetCollisionMaskValue(1, true);
-            PlatformFloorLayers = 1;
+            //PlatformFloorLayers = 1;
         }
         else
         {
             IsClient = false;
-            SetCollisionLayerValue(10, true);
-            SetCollisionMaskValue(10, true);
-            PlatformFloorLayers = 512;
+            SetCollisionLayerValue(8, true);
+            SetCollisionMaskValue(8, true);
+            //PlatformFloorLayers = 128;
         }
 
         MapManager = Manager.MapManager;
@@ -71,8 +77,7 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
                 }
                 else
                 {
-                    // ntd.Visible = false;
-                    ntd.Visible = true;
+                    ntd.Visible = false;
                 }
             }
 

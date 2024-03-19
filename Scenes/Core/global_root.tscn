@@ -1,3 +1,8 @@
-[gd_scene format=3 uid="uid://bsmis6rhc64l3"]
+[gd_scene load_steps=2 format=3 uid="uid://bsmis6rhc64l3"]
+
+[ext_resource type="Script" path="res://Code/Common/Managers/EnvManager.cs" id="1_f5r8c"]
 
 [node name="GlobalsRoot" type="Node"]
+
+[node name="EnvManager" type="Node" parent="."]
+script = ExtResource("1_f5r8c")

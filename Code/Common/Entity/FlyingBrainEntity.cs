@@ -4,7 +4,6 @@ using Lavender.Common.Data.Saving.Mapping;
 using Lavender.Common.Entity.Data;
 using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Entity;
-using Lavender.Common.Globals;
 using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Utils;

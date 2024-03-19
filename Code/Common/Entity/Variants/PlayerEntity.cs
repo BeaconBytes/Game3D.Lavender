@@ -37,7 +37,10 @@ public partial class PlayerEntity : HumanoidEntity
     public override void _Process(double delta)
     {
         base._Process(delta);
-		
+
+        if (Manager.IsServer)
+            return;
+        
         HandleMovementInputs();
 		
         if(Input.IsActionJustPressed("ui_cancel"))
@@ -81,7 +84,7 @@ public partial class PlayerEntity : HumanoidEntity
                     flagsInput = _flagsInput,
                 };
                 _lookInput = Vector3.Zero;
-		
+                
                 InputBuffer[bufferIndex] = inputPayload;
                 StateBuffer[bufferIndex] = ProcessMovement(inputPayload);
         

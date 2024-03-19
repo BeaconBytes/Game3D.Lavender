@@ -9,7 +9,7 @@
   <ItemGroup>
     <Folder Include="addons\points_cloud\ui\" />
     <Folder Include="Code\Common\Inventory\Items\Variants\" />
-    <Folder Include="Code\Common\Worlds\Blocks\Variants\" />
+    <Folder Include="Code\Common\Voxels\Blocks\Variants\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteNetLib-Godot\LiteNetLib\LiteNetLib.csproj" />

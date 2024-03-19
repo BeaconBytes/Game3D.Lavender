@@ -21,9 +21,9 @@ public partial class ClientManager : GameManager
 		TickingDisabled = false;
 		
 		_netManager.Start();
-		_netManager.Connect(Overseer.ClientTargetIp, Overseer.ClientTargetPort, NETWORK_KEY);
+		_netManager.Connect(EnvManager.ClientTargetIp, EnvManager.ClientTargetPort, NETWORK_KEY);
 
-		GD.Print($"Connecting to {Overseer.ClientTargetIp}:{Overseer.ClientTargetPort}...");
+		GD.Print($"Connecting to {EnvManager.ClientTargetIp}:{EnvManager.ClientTargetPort}...");
 		
 		_netListener.NetworkReceiveEvent += OnNetReceived;
 		_netListener.PeerConnectedEvent += OnNetPeerConnected;

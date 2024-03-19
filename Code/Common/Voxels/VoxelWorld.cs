@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Enums.Types;
-using Lavender.Common.Worlds.Blocks;
-using Lavender.Common.Worlds.Chunks;
+using Lavender.Common.Voxels.Blocks;
+using Lavender.Common.Voxels.Chunks;
 
-namespace Lavender.Common.Worlds;
+namespace Lavender.Common.Voxels;
 
-public partial class MapWorld : Node3D
+public partial class VoxelWorld : Node3D
 {
     public int ChunkSize { get; protected set; } = 32;
     public int WorldHeight { get; protected set; } = 64;
@@ -18,18 +17,18 @@ public partial class MapWorld : Node3D
     public int WorldSeed { get; protected set; } = 42069;
     public Vector2I ChunkAtlasSize { get; protected set; } = new(8, 3);
 
-    public Dictionary<BlockType, MapBlockType> BlockReg { get; protected set; } = new()
+    public Dictionary<BlockType, VoxelBlockInfo> BlockReg { get; protected set; } = new()
     {
         {
             BlockType.Air,
-            new MapBlockType()
+            new VoxelBlockInfo()
             {
                 IsSolid = false,
             }
         },
         {
           BlockType.Bedrock,
-          new MapBlockType()
+          new VoxelBlockInfo()
           {
               IsSolid = true,
               TextureData = new()
@@ -41,10 +40,10 @@ public partial class MapWorld : Node3D
         },
         {
             BlockType.Dirt,
-            new MapBlockType()
+            new VoxelBlockInfo()
             {
                 IsSolid = true,
-                TextureData = new MapBlockType.TextureFaceData()
+                TextureData = new VoxelBlockInfo.TextureFaceData()
                 {
                     Top = new(2,0), Bottom = new(2,0), Left = new(2,0),
                     Right = new(2,0), Front = new(2,0), Back = new(2,0),
@@ -53,10 +52,10 @@ public partial class MapWorld : Node3D
         },
         {
             BlockType.Grass,
-            new MapBlockType()
+            new VoxelBlockInfo()
             {
                 IsSolid = true,
-                TextureData = new MapBlockType.TextureFaceData()
+                TextureData = new VoxelBlockInfo.TextureFaceData()
                 {
                     Top = new(0,0), Bottom = new(2,0), Left = new(1,0),
                     Right = new(1,0), Front = new(1,0), Back = new(1,0),
@@ -65,10 +64,10 @@ public partial class MapWorld : Node3D
         },
         {
             BlockType.Stone,
-            new MapBlockType()
+            new VoxelBlockInfo()
             {
                 IsSolid = true,
-                TextureData = new MapBlockType.TextureFaceData()
+                TextureData = new VoxelBlockInfo.TextureFaceData()
                 {
                     Top = new(1,1), Bottom = new(1,1), Left = new(1,1),
                     Right = new(1,1), Front = new(1,1), Back = new(1,1),
@@ -79,17 +78,18 @@ public partial class MapWorld : Node3D
     
     public override void _Ready()
     {
-        int chunksCount = Mathf.CeilToInt( (float)WorldSize / ChunkSize);
-        _chunkOffset = Mathf.RoundToInt(chunksCount / 2f);
-        
-        GenerateTerrain(chunksCount);
+        // GenerateNewTerrain();
     }
 
-    public void GenerateTerrain(int chunksAmt = 4)
+    public void GenerateNewTerrain()
     {
+        int chunksAmt = Mathf.CeilToInt( (float)WorldSize / ChunkSize);
         int maxYChunks = Mathf.CeilToInt(WorldHeight / (float)ChunkSize);
         
-        _loadedChunks = new MapChunk[chunksAmt, maxYChunks, chunksAmt];
+        _chunkOffset = Mathf.RoundToInt(chunksAmt / 2f);
+        
+        
+        _loadedChunks = new VoxelChunk[chunksAmt, maxYChunks, chunksAmt];
         
         for (int x = 0; x < chunksAmt; x++)
         {
@@ -101,7 +101,7 @@ public partial class MapWorld : Node3D
                     int chunkY = y;
                     int chunkZ = z - _chunkOffset;
                     
-                    MapChunk tmp = CreateChunk(chunkX, chunkY, chunkZ);
+                    VoxelChunk tmp = CreateChunk(chunkX, chunkY, chunkZ);
                     _loadedChunks[x, y, z] = tmp;
                 }
             }
@@ -138,10 +138,21 @@ public partial class MapWorld : Node3D
         return _loadedChunks[chunkX, chunkY, chunkZ].GetBlockTypeAtPos(blockX, blockY, blockZ);
     }
 
-    private MapChunk CreateChunk(int chunkX, int chunkY, int chunkZ)
+    private VoxelChunk CreateChunk(int chunkX, int chunkY, int chunkZ)
     {
-        MapChunk chunk = new MapChunk();
+        VoxelChunk chunk = new VoxelChunk();
         AddChild(chunk);
+        chunk.GlobalPosition = new Vector3(chunkX * ChunkSize, chunkY * ChunkSize, chunkZ * ChunkSize);
+        chunk.Setup(new Vector3I(chunkX, chunkY, chunkZ), this);
+
+        return chunk;
+    }
+
+    private VoxelChunk CreateEmptyChunk(int chunkX, int chunkY, int chunkZ)
+    {
+        VoxelChunk chunk = new();
+        AddChild(chunk);
+
         chunk.GlobalPosition = new Vector3(chunkX * ChunkSize, chunkY * ChunkSize, chunkZ * ChunkSize);
         chunk.Setup(new Vector3I(chunkX, chunkY, chunkZ), this);
 
@@ -156,7 +167,7 @@ public partial class MapWorld : Node3D
     [Export]
     public Material ChunkMaterial { get; protected set; }
 
-    private MapChunk[,,] _loadedChunks;
+    private VoxelChunk[,,] _loadedChunks;
 
     private int _chunkOffset = 2;
 }

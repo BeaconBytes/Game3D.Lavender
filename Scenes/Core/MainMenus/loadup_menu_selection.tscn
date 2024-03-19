@@ -83,7 +83,6 @@ alignment = 0
 layout_mode = 2
 theme_override_fonts/font = ExtResource("4_014ji")
 theme_override_font_sizes/font_size = 64
-disabled = true
 text = "SINGLEPLAYER"
 flat = true
 alignment = 0

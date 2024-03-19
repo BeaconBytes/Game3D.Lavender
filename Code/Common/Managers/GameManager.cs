@@ -7,13 +7,14 @@ using Lavender.Common.Entity;
 using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Enums.Types;
+using Lavender.Common.Exceptions;
 using Lavender.Common.Managers.Variants;
 using Lavender.Common.Networking.Packets;
 using Lavender.Common.Registers;
+using Lavender.Server.Managers;
 using LiteNetLib;
 using LiteNetLib.Utils;
 using Environment = System.Environment;
-using Overseer = Lavender.Common.Globals.Overseer;
 
 namespace Lavender.Common.Managers;
 
@@ -32,23 +33,30 @@ public partial class GameManager : LoadableNode
         base.Load();
 
         if (this is ClientManager)
+        {
             IsClient = true;
+            IsServer = false;
+        }
+        else if (this is ServerManager)
+        {
+            IsServer = true;
+            IsClient = false;
+        }
         
-        Overseer = GetNode<Overseer>("/root/Overseer");
+        EnvManager = GetTree().CurrentScene.GetNode<EnvManager>("EnvManager");
+        if (EnvManager == null)
+            throw new BadNodeSetupException("EnvManager not found!");
         
-        IsDualManager = Overseer.IsDualManagers;
+        IsDualManager = EnvManager.IsDualManagers;
         
         ApplyRegistryDefaults();
 
         TickingDisabled = true;
         
-        if (this is not DualManager)
+        _netManager = new NetManager(_netListener)
         {
-            _netManager = new NetManager(_netListener)
-            {
-                IPv6Enabled = false,
-            };
-        }
+            IPv6Enabled = false,
+        };
     }
 
     protected override void Unload()
@@ -107,6 +115,7 @@ public partial class GameManager : LoadableNode
         MapSocketNode.AddChild(CurrentMapRootNode);
 
         MapManager = (MapManager)CurrentMapRootNode;
+        WaveManager = CurrentMapRootNode.GetNode<WaveManager>("WaveManager");
     }
     
     protected virtual void ApplyRegistryDefaults()
@@ -156,7 +165,7 @@ public partial class GameManager : LoadableNode
         return gameEntity;
     }
 
-    protected TEntity SpawnEntity<TEntity>(EntityType entityType, uint presetNetId = 0) where TEntity : IGameEntity
+    public TEntity SpawnEntity<TEntity>(EntityType entityType, uint presetNetId = 0) where TEntity : IGameEntity
     {
         return (TEntity)SpawnEntity(entityType, presetNetId);
     }
@@ -175,11 +184,11 @@ public partial class GameManager : LoadableNode
         if (!gameEntity.Destroyed)
         {
             gameEntity.Destroy();
+            Node3D tarNode = (Node3D)gameEntity;
+            RemoveChild(tarNode);
+            tarNode.QueueFree();
         }
         
-        Node3D tarNode = (Node3D)gameEntity;
-        RemoveChild(tarNode);
-        tarNode.QueueFree();
     }
     
     public void SendPacketToClient(GamePacket packet, uint netId)
@@ -308,10 +317,11 @@ public partial class GameManager : LoadableNode
 
     protected const string NETWORK_KEY = "LavendarKey787";
 
-    public Overseer Overseer { get; private set; }
+    public EnvManager EnvManager { get; private set; }
 
     public bool IsClient { get; private set; } = false;
     public bool IsServer { get; private set; } = false;
+    public bool IsDualManager { get; protected set; } = true;
 
     protected readonly Dictionary<uint, Node3D> SpawnedNodes = new ();
     protected readonly Dictionary<uint, IGameEntity> SpawnedEntities = new();
@@ -333,10 +343,10 @@ public partial class GameManager : LoadableNode
     [Export]
     protected Node CurrentMapRootNode;
     public MapManager MapManager { get; protected set; }
+    public WaveManager WaveManager { get; protected set; }
     public PathManager PathManager { get; protected set; }
 
     public bool TickingDisabled { get; protected set; } = true;
-    public bool IsDualManager { get; protected set; } = true;
 
     private bool _isFirstTick = true;
 

@@ -1,8 +1,8 @@
 using Godot;
 
-namespace Lavender.Common.Worlds.Blocks;
+namespace Lavender.Common.Voxels.Blocks;
 
-public class MapBlockType
+public class VoxelBlockInfo
 {
     public bool IsSolid { get; set; }
 

@@ -19,15 +19,15 @@ public partial class ServerManager : GameManager
 {
 	private const int MAX_PLAYERS_COUNT = 10;
 
-	protected override async void Load()
+	protected override void Load()
 	{
 		base.Load();
 		
 		TickingDisabled = false;
 		
-		if (!_netManager.Start(Overseer.ServerPort))
+		if (!_netManager.Start(EnvManager.ServerPort))
 		{
-			throw new Exception($"Failed to start server: port {Overseer.ServerPort} is likely already in use!");
+			throw new Exception($"Failed to start server: port {EnvManager.ServerPort} is likely already in use!");
 		}
 
 		_netListener.NetworkReceiveEvent += OnNetReceived;
@@ -39,21 +39,15 @@ public partial class ServerManager : GameManager
 		
 		EntitySpawnedEvent += OnEntitySpawned;
 		
-		GD.Print($"Server started on port {8778}");
+		GD.Print($"Server started on port {EnvManager.ServerPort}");
 
 		MapName = "default";
-
-		// if (Overseer.IsDebugMode)
-		// {
-		// 	MapName = "debug";
-		// }
-		Register.Packets.Subscribe<DebugActionPacket>(OnDebugActionPacket);
+		
+		// Register.Packets.Subscribe<DebugActionPacket>(OnDebugActionPacket);
 
 		LoadMapByName(MapName);
-
-		PathManager = new PathManager();
-		AddChild(PathManager);
-		await PathManager.LoadMap("./save/mapping/kraken_volumetric.nav");
+		WaveManager.Setup(this);
+		WaveManager.StartWave();
 	}
 
 	/// <summary>
@@ -74,9 +68,7 @@ public partial class ServerManager : GameManager
 
 	protected override void Start()
 	{
-		base.Start();
-		LighthouseEntity ent = SpawnEntity<LighthouseEntity>(EntityType.Lighthouse);
-		ent.Teleport(new Vector3(8, 3, 8));
+		
 	}
 
 	protected override void ApplyRegistryDefaults()
@@ -87,7 +79,7 @@ public partial class ServerManager : GameManager
 	private void OnNetReceived(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
 	{
 		PacketType packetType = (PacketType)reader.GetByte();
-
+		
 		uint sourceNetId = GetNetIdFromPeer(peer);
 		
 		Register.Packets.InvokeSubscriberEvent(packetType, reader, sourceNetId);
@@ -95,6 +87,11 @@ public partial class ServerManager : GameManager
 
 	private void OnNetConnRequested(ConnectionRequest request)
 	{
+		if (EnvManager.IsSinglePlayer && PlayerPeers.Count > 0)
+		{
+			request.RejectForce();
+			return;
+		}
 		if (PlayerPeers.Count < MAX_PLAYERS_COUNT)
 		{
 			request.AcceptIfKey(NETWORK_KEY);
@@ -156,15 +153,15 @@ public partial class ServerManager : GameManager
 	}
 	private void OnDebugActionPacket(DebugActionPacket packet, uint sourceNetId)
 	{
-		if (packet.Message.ToLower().Equals("debug"))
-		{
-			if (packet.Augment == 0)
-			{
-				LighthouseEntity ent = SpawnEntity<LighthouseEntity>(EntityType.Lighthouse);
-				ent.Teleport(new Vector3(1, 3, 1));
-				ent.SetDesiredPathLocation(new Vector3(0f, -10f, 0f));
-			}
-		}
+		// if (packet.Message.ToLower().Equals("debug"))
+		// {
+		// 	if (packet.Augment == 0)
+		// 	{
+		// 		LighthouseEntity ent = SpawnEntity<LighthouseEntity>(EntityType.Lighthouse);
+		// 		ent.Teleport(new Vector3(1, 3, 1));
+		// 		ent.SetDesiredPathLocation(new Vector3(0f, -10f, 0f));
+		// 	}
+		// }
 	}
 	
 	

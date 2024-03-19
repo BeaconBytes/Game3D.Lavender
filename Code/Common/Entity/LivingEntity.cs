@@ -4,7 +4,7 @@ using Godot;
 using Lavender.Common.Entity.Data;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
-using Lavender.Common.Globals;
+using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Registers;
 
@@ -14,7 +14,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
 {
     private float _deltaTimer = 0;
     public uint CurrentTick { get; protected set; }
-    protected float MinTimeBetweenTicks { get; private set; } = 1f / Overseer.SERVER_TICK_RATE;
+    protected float MinTimeBetweenTicks { get; private set; } = 1f / EnvManager.SERVER_TICK_RATE;
 
     protected const uint BUFFER_SIZE = 512;
 
@@ -22,10 +22,13 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     {
         base._Ready();
         Stats = new EntityStats();
-        Register.Packets.Subscribe<EntityTeleportPacket>(OnEntityTeleportPacket);
         
         Register.Packets.Subscribe<EntityStatePayloadPacket>(OnStatePayloadPacket);
-        if (!Manager.IsClient)
+        if (Manager.IsClient)
+        {
+            Register.Packets.Subscribe<EntityTeleportPacket>(OnEntityTeleportPacket);
+        }
+        else
         {
             Register.Packets.Subscribe<EntityInputPayloadPacket>(OnInputPayloadPacket);
         }
@@ -177,7 +180,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
 
     protected virtual void HandleTick()
     {
-        if (NetId == (uint)StaticNetId.Null && CurrentTick % (Overseer.SERVER_TICK_RATE * 5f) == 0)
+        if (NetId == (uint)StaticNetId.Null && CurrentTick % (EnvManager.SERVER_TICK_RATE * 5f) == 0)
             GD.PrintErr("NetId of Entity is NULL!");
     }
     

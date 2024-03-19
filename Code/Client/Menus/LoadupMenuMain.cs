@@ -7,7 +7,7 @@ public partial class LoadupMenuMain : LoadableMenu
 {
 	private void OnPlayButtonPressed()
 	{
-		Overseer.GotoScene(Register.SceneTable["loadup_menu_selection"]);
+		EnvManager.GotoScene(Register.SceneTable["loadup_menu_selection"]);
 	}
 
 	private void OnQuitButtonPressed()

@@ -2,40 +2,30 @@ using System;
 using System.IO;
 using Godot;
 using Lavender.Common.Data.Config;
-using Lavender.Common.Managers;
 using Lavender.Common.Registers;
 using Newtonsoft.Json;
 
-namespace Lavender.Common.Globals;
+namespace Lavender.Common.Managers;
 
-/// <summary>
-/// Overseer is an AutoLoad that provides major functionality to the Keeper class as well
-/// as some other classes here and there as needed. It also handles intial splash and
-/// provides configuration file access
-/// </summary>
-public partial class Overseer : LoadableNode
+public partial class EnvManager : Node
 {
     private const string ConfigFileName = "UserConfig.json";
     
 
-    public bool IsServer { get; protected set; } = true;
+    public bool IsServer { get; protected set; } = false;
     
     public bool IsDebugMode { get; protected set; } = false;
     
-    public const float SERVER_TICK_RATE = 40f;
+    public const float SERVER_TICK_RATE = 20f;
 
-    protected override void Load()
+    public override void _Ready()
     {
-        base.Load();
-
         bool isProperlyExported = OS.HasFeature("server") || OS.HasFeature("client");
 
         if (isProperlyExported)
         {
             if (OS.HasFeature("server"))
-            {
                 IsServer = true;
-            }
 
             if (OS.HasFeature("client"))
                 IsServer = false;
@@ -171,8 +161,9 @@ public partial class Overseer : LoadableNode
         ClientTargetPort = 9218;
         ServerPort = ClientTargetPort;
         IsDualManagers = true;
+        IsSinglePlayer = true;
         
-        GotoScene(Register.SceneTable["env_dual"], true, true);
+        GotoScene(Register.SceneTable["env_dual"], false, true);
     }
 
     public string ClientTargetIp { get; protected set; } = string.Empty;
@@ -180,6 +171,7 @@ public partial class Overseer : LoadableNode
     public int ServerPort { get; protected set; } = 8778;
 
     public bool IsDualManagers { get; protected set; } = false;
+    public bool IsSinglePlayer { get; protected set; } = false;
 
     private readonly JsonSerializer _jsonSerializer = new JsonSerializer();
     

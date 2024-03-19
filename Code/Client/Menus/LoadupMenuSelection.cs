@@ -7,17 +7,17 @@ public partial class LoadupMenuSelection : LoadableMenu
 {
 	void OnJoinButtonPressed()
 	{
-		Overseer.GotoScene(Register.SceneTable["loadup_menu_join"]);
+		EnvManager.GotoScene(Register.SceneTable["loadup_menu_join"]);
 	}
 
 	void OnBackButtonPressed()
 	{
-		Overseer.GotoScene(Register.SceneTable["loadup_menu_main"]);
+		EnvManager.GotoScene(Register.SceneTable["loadup_menu_main"]);
 	}
 
 	void OnSinglePlayerButtonPressed()
 	{
 		// Overseer.JoinServer(ipAddress, 8778)
-		Overseer.JoinSinglePlayer();
+		EnvManager.JoinSinglePlayer();
 	}
 }

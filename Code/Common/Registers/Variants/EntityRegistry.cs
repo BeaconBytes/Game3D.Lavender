@@ -11,9 +11,10 @@ public class EntityRegistry
 {
     public void LoadDefaults()
     {
-        Register<DevEntity>(EntityType.Dev, "res://Scenes/Core/Entities/dev_entity.tscn");
         Register<PlayerEntity>(EntityType.Player, "res://Scenes/Core/Entities/Player/player_entity.tscn");
-        Register<LighthouseEntity>(EntityType.Lighthouse, "res://Scenes/Core/Entities/lighthouse_entity.tscn");
+        Register<BoomerEntity>(EntityType.Boomer, "res://Scenes/Core/Entities/boomer_entity.tscn");
+        // Register<DevEntity>(EntityType.Dev, "res://Scenes/Core/Entities/dev_entity.tscn");
+        // Register<LighthouseEntity>(EntityType.Lighthouse, "res://Scenes/Core/Entities/lighthouse_entity.tscn");
     }
     
     public void Register<TEntity>( EntityType entityType, string resPath ) where TEntity : IGameEntity

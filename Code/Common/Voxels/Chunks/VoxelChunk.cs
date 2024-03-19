@@ -2,26 +2,27 @@
 using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Enums.Types;
-using Lavender.Common.Worlds.Blocks;
+using Lavender.Common.Voxels.Blocks;
 
-namespace Lavender.Common.Worlds.Chunks;
+namespace Lavender.Common.Voxels.Chunks;
 
-public partial class MapChunk : Node3D
+public partial class VoxelChunk : Node3D
 {
-    public void Setup(Vector3I chunkPosition, MapWorld mapWorld)
+    public void Setup(Vector3I chunkPosition, VoxelWorld voxelWorld, bool generateNewBlocks = false)
     {
         ChunkPosition = chunkPosition;
         
-        _mapWorld = mapWorld;
+        _voxelWorld = voxelWorld;
 
-        Noise.Seed = _mapWorld.WorldSeed;
+        Noise.Seed = _voxelWorld.WorldSeed;
         Noise.NoiseType = FastNoiseLite.NoiseTypeEnum.Simplex;
-        Noise.Offset = new Vector3(ChunkPosition.X * _mapWorld.ChunkSize, ChunkPosition.Z * _mapWorld.ChunkSize, 0);
+        Noise.Offset = new Vector3(ChunkPosition.X * _voxelWorld.ChunkSize, ChunkPosition.Z * _voxelWorld.ChunkSize, 0);
         Noise.FractalOctaves = 7;
         Noise.FractalLacunarity = 0.33f;
         Noise.Frequency = 0.033f;
         
-        GenerateBlocks();
+        if(generateNewBlocks)
+            GenerateNewBlocks();
         // DisplayBlocks();
     }
 
@@ -41,11 +42,11 @@ public partial class MapChunk : Node3D
         st.Begin(Mesh.PrimitiveType.Triangles);
         st.SetSmoothGroup(UInt32.MaxValue);
         
-        for (int x = 0; x < _mapWorld.ChunkSize; x++)
+        for (int x = 0; x < _voxelWorld.ChunkSize; x++)
         {
-            for (int y = 0; y < _mapWorld.ChunkSize; y++)
+            for (int y = 0; y < _voxelWorld.ChunkSize; y++)
             {
-                for (int z = 0; z < _mapWorld.ChunkSize; z++)
+                for (int z = 0; z < _voxelWorld.ChunkSize; z++)
                 {
                     CreateBlock(x, y, z);
                 }
@@ -53,7 +54,7 @@ public partial class MapChunk : Node3D
         }
 
         st.GenerateNormals();
-        st.SetMaterial(_mapWorld.ChunkMaterial);
+        st.SetMaterial(_voxelWorld.ChunkMaterial);
         st.Commit(chunkMesh);
         chunkMeshInstance.Mesh = chunkMesh;
 
@@ -61,26 +62,26 @@ public partial class MapChunk : Node3D
         chunkMeshInstance.CreateTrimeshCollision();
     }
 
-    public void GenerateBlocks()
+    public void GenerateNewBlocks()
     {
         _isAllAir = true;
-        _blocks = new BlockType[_mapWorld.ChunkSize, _mapWorld.ChunkSize, _mapWorld.ChunkSize];
+        _blocks = new BlockType[_voxelWorld.ChunkSize, _voxelWorld.ChunkSize, _voxelWorld.ChunkSize];
 
         int bedrockHeight = 0;
-        int stoneHeight = Mathf.RoundToInt(_mapWorld.TerrainAmplitude * 0.66f);
-        int dirtHeight = Mathf.RoundToInt(_mapWorld.TerrainAmplitude * 0.85f);
+        int stoneHeight = Mathf.RoundToInt(_voxelWorld.TerrainAmplitude * 0.66f);
+        int dirtHeight = Mathf.RoundToInt(_voxelWorld.TerrainAmplitude * 0.85f);
         
         for (int j = 0; j < _blocks.GetLength(0); j++)
         {
             for (int l = 0; l < _blocks.GetLength(2); l++)
             {
 
-                float resultHeight = ((Noise.GetNoise2D(j, l) + 1) / 2f) * _mapWorld.TerrainAmplitude;
+                float resultHeight = ((Noise.GetNoise2D(j, l) + 1) / 2f) * _voxelWorld.TerrainAmplitude;
                 int aproxHeight = Mathf.FloorToInt(resultHeight);
                 
                 for (int k = 0; k < _blocks.GetLength(1); k++)
                 {
-                    int globalHeightPos = (ChunkPosition.Y * _mapWorld.ChunkSize) + k;
+                    int globalHeightPos = (ChunkPosition.Y * _voxelWorld.ChunkSize) + k;
                     
                     BlockType blockType = BlockType.Air;
 
@@ -118,7 +119,7 @@ public partial class MapChunk : Node3D
         if (blockType == BlockType.Air)
             return;
 
-        MapBlockType.TextureFaceData blockFaceData = _mapWorld.BlockReg[blockType].TextureData;
+        VoxelBlockInfo.TextureFaceData blockFaceData = _voxelWorld.BlockReg[blockType].TextureData;
         
         if(CheckTransparentBlock(x, y+1, z))
             CreateFace(_faceTop, x, y, z, blockFaceData.Top);
@@ -142,9 +143,9 @@ public partial class MapChunk : Node3D
         Vector3 c = _blockVertices[i[2]] + offset;
         Vector3 d = _blockVertices[i[3]] + offset;
 
-        Vector2 uvOffset = texAtlasOffset / _mapWorld.ChunkAtlasSize;
-        float height = 1f / _mapWorld.ChunkAtlasSize.Y;
-        float width = 1f / _mapWorld.ChunkAtlasSize.X;
+        Vector2 uvOffset = texAtlasOffset / _voxelWorld.ChunkAtlasSize;
+        float height = 1f / _voxelWorld.ChunkAtlasSize.Y;
+        float width = 1f / _voxelWorld.ChunkAtlasSize.X;
 
         // Correspond to 4 corners of mesh in UV co-ords:
         // uvA - TopLeft corner
@@ -163,24 +164,24 @@ public partial class MapChunk : Node3D
     private bool CheckTransparentBlock(int x, int y, int z)
     {
         // Assuming symmetrical chunk sizing/bounds here.
-        int chunkSize = _mapWorld.ChunkSize;
+        int chunkSize = _voxelWorld.ChunkSize;
         if (x >= 0 && x < chunkSize &&
             y >= 0 && y < chunkSize &&
             z >= 0 && z < chunkSize)
-            return !(_mapWorld.BlockReg[_blocks[x, y, z]].IsSolid);
+            return !(_voxelWorld.BlockReg[_blocks[x, y, z]].IsSolid);
         
         // Need to check world pos to see if other chunks have air blocks around this block
         int worldX = (ChunkPosition.X * chunkSize) + x;
         int worldY = (ChunkPosition.Y * chunkSize) + y;
         int worldZ = (ChunkPosition.Z * chunkSize) + z;
 
-        float worldSizeHalf = _mapWorld.WorldSize / 2f;
+        float worldSizeHalf = _voxelWorld.WorldSize / 2f;
         
         if (worldX > -worldSizeHalf && worldX < worldSizeHalf &&
-            worldY >= 0 && worldY < _mapWorld.WorldHeight &&
+            worldY >= 0 && worldY < _voxelWorld.WorldHeight &&
             worldZ > -worldSizeHalf && worldZ < worldSizeHalf)
         {
-            return !(_mapWorld.BlockReg[_mapWorld.GetBlockAtPos(worldX, worldY, worldZ)].IsSolid);
+            return !(_voxelWorld.BlockReg[_voxelWorld.GetBlockAtPos(worldX, worldY, worldZ)].IsSolid);
             // bool val = !(_mapWorld.BlockReg[_mapWorld.GetBlockAtPos(worldX, worldY, worldZ)].IsSolid);
             // if (val)
             //     throw new Exception("FOUND VAL");
@@ -203,7 +204,7 @@ public partial class MapChunk : Node3D
 
     private bool IsPosInBounds(int x, int y, int z)
     {
-        int chunkSize = _mapWorld.ChunkSize;
+        int chunkSize = _voxelWorld.ChunkSize;
         return (x >= 0 && x < chunkSize &&
                 y >= 0 && y < chunkSize &&
                 z >= 0 && z < chunkSize);
@@ -238,5 +239,5 @@ public partial class MapChunk : Node3D
 
     private BlockType[,,] _blocks;
 
-    private MapWorld _mapWorld;
+    private VoxelWorld _voxelWorld;
 }

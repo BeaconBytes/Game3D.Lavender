@@ -50,7 +50,7 @@ public class VolumetricNavSave
         _unwalkablesBuffer.Add(point);
     }
 
-    public async Task SetupPathManager(PathManager pathManager)
+    public void SetupPathManager(PathManager pathManager)
     {
         ulong curId = 0;
         // Add the points

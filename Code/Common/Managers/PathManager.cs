@@ -12,7 +12,7 @@ public partial class PathManager : LoadableNode
     public async Task LoadMap(string mapFilePath)
     {
         VolumetricNavSave navSave = await Task.Run(() => VolumetricNavSave.FromFile(mapFilePath));
-        await navSave.SetupPathManager(this);
+        navSave.SetupPathManager(this);
     }
 
     public Vector3[] GetPathPoints(Vector3 fromPos, Vector3 toPos)
