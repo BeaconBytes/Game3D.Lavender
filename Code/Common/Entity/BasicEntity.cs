@@ -61,8 +61,18 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
                     cam.ClearCurrent();
                 }
             }
-
-            if (n is Node3D ntd)
+            else if(n is Control con)
+            {
+                if (NetId == manager.ClientNetId)
+                {
+                    con.Visible = true;
+                }
+                else
+                {
+                    con.Visible = false;
+                }
+            }
+            else if (n is Node3D ntd)
             {
                 if (Manager.IsClient)
                 {
@@ -81,18 +91,6 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
                 }
             }
 
-            if(n is Control con)
-            {
-                if (NetId == manager.ClientNetId)
-                {
-                    con.Visible = true;
-                }
-                else
-                {
-                    con.Visible = false;
-                }
-            }
-
         }
     }
 
@@ -103,7 +101,7 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
     public void Teleport(Vector3 position)
     {
         GlobalPosition = position;
-        if (!Manager.IsClient)
+        if (!IsClient)
         {
             Manager.BroadcastPacketToClients(new EntityTeleportPacket()
             {
@@ -111,10 +109,8 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
                 Position = position,
             });
         }
-        else
-        {
-            Velocity = new Vector3(0, 0, 0);
-        }
+
+        TeleportedEvent?.Invoke(this);
     }
 
     public void RotateTo(Vector3 rotation)
@@ -164,9 +160,13 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
 
     public bool Destroyed { get; private set; } = false;
 
+    public bool Enabled { get; set; } = true;
+
     // EVENT HANDLERS //
     public delegate void EntityDestroyEventHandler(IGameEntity sourceEntity);
 
+    public delegate void EntityTeleportedEventHandler(IGameEntity sourceEntity);
+    
     /// <summary>
     /// A array of things we should hide if this entity is set to being controlled by this client(Models, Particles, etc.)
     /// </summary>
@@ -175,4 +175,5 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
     
     // EVENTS //
     public event EntityDestroyEventHandler DestroyedEvent;
+    public event EntityTeleportedEventHandler TeleportedEvent;
 }

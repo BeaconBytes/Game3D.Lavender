@@ -19,7 +19,32 @@ public partial class WaveManager : LoadableNode
     {
         Manager = gameManager;
         CurrentWaveState = WaveState.Stopped;
+
+        Manager.EntitySpawnedEvent += OnSpawnedEntity;
+        Manager.EntityDestroyedEvent += OnDestroyedEntity;
     }
+
+    
+    private void OnSpawnedEntity(IGameEntity gameEntity)
+    {
+        if (gameEntity is BoomerEntity boomerEntity)
+        {
+            boomerEntity.OnCompletedPathEvent += OnCompletedBotPath;
+        }
+    }
+    private void OnDestroyedEntity(IGameEntity gameEntity)
+    {
+        if (gameEntity is BoomerEntity boomerEntity)
+        {
+            boomerEntity.OnCompletedPathEvent -= OnCompletedBotPath;
+        }
+    }
+    private void OnCompletedBotPath(BoomerEntity boomerEntity)
+    {
+        Manager.DestroyEntity(boomerEntity);
+    }
+    
+
 
     protected override void Unload()
     {
@@ -57,12 +82,13 @@ public partial class WaveManager : LoadableNode
             {
                 BoomerEntity boomerEntity = Manager.SpawnEntity<BoomerEntity>(EntityType.Boomer);
                 _spawnedEnemies.Add(boomerEntity.NetId, boomerEntity);
+                
                 // TODO: Better way to convert botPathPoints into a System Array
                 boomerEntity.WaveSetup(new List<Marker3D>(botPathPoints).ToArray(), this);
                 
                 _enemiesToSpawnCount--;
             }
-            else if (_enemiesToSpawnCount <= 0)
+            else if (_enemiesToSpawnCount <= 0 && _spawnedEnemies.Count == 0)
             {
                 SetWaveState(WaveState.Finished);
             }

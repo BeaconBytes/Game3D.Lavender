@@ -26,6 +26,7 @@ public enum PacketType : byte
 
     // Entity Updates
     EntityRotate,
+    EntityMoveTo,
     EntityTeleport,
     EntityInputPayload,
     EntityStatePayload,

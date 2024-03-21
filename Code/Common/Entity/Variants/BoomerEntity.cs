@@ -4,10 +4,11 @@ using Lavender.Common.Enums.Entity;
 using Lavender.Common.Interfaces.Management.Waves;
 using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
+using Lavender.Server.Managers;
 
 namespace Lavender.Common.Entity.Variants;
 
-public partial class BoomerEntity : LivingEntity, IWaveEnemy
+public partial class BoomerEntity : BrainEntity, IWaveEnemy
 {
     
     public void WaveSetup(Marker3D[] botPathPoints, WaveManager waveManager)
@@ -16,61 +17,66 @@ public partial class BoomerEntity : LivingEntity, IWaveEnemy
         _botPathPointsCache = botPathPoints;
 
         Teleport(_botPathPointsCache[0].GlobalPosition);
-        SetDesiredPathLocation(_botPathPointsCache[5].GlobalPosition);
+        SetDesiredPathLocation(_botPathPointsCache[1].GlobalPosition);
     }
-    
+
+    private void TargetNextPoint()
+    {
+        if (_targetedPointIndex + 1 >= _botPathPointsCache.Length)
+        {
+            return;
+        }
+
+        _targetedPointIndex++;
+        SetDesiredPathLocation(_botPathPointsCache[_targetedPointIndex].GlobalPosition);
+        LookAt(new Vector3(_botPathPointsCache[_targetedPointIndex].GlobalPosition.X, GlobalPosition.Y, _botPathPointsCache[_targetedPointIndex].GlobalPosition.Z));
+        SnapRotationTo(GlobalRotation);
+    }
+
     protected override void HandleTick()
     {
         base.HandleTick();
 
-        if (Manager.IsClient)
+        if (!Enabled)
+            return;
+
+        if (IsClient) 
+            return;
+        if (_botPathPointsCache[_targetedPointIndex].GlobalPosition.DistanceSquaredTo(GlobalPosition) <= 4f)
         {
-            if (LatestServerState.Equals(default(StatePayload)) ||
-                (!LastProcessedState.Equals(default(StatePayload)) && LatestServerState.Equals(LastProcessedState)))
+            // Reached the targeted path position/point
+            if (_targetedPointIndex + 1 >= _botPathPointsCache.Length)
             {
-                HandleServerReconciliation();
+                // Finished the path.
+                OnCompletedPathEvent?.Invoke(this);
             }
-            
-            LastProcessedState = LatestServerState;
-            GlobalPosition = LatestServerState.position;
-            GlobalRotation = LatestServerState.rotation;
+            TargetNextPoint();
         }
-        else
+
+    }
+
+    public void SnapRotationTo(Vector3 rotation)
+    {
+        GlobalRotation = rotation;
+        if (Manager is ServerManager)
         {
-            Vector3 curPos = GlobalPosition;
-            Vector3 nextPos = _navAgent.GetNextPathPosition();
-
-            Vector3 moveDirVec = (nextPos - curPos).Normalized();
-            moveDirVec.Y = 0;
-            InputPayload inputPayload = new InputPayload()
-            {
-                tick = CurrentTick,
-                lookInput = new Vector3(0f, 0f, 0f),
-                moveInput = new Vector3(moveDirVec.X, 0f, moveDirVec.Z),
-                flagsInput = EntityMoveFlags.None,
-            };
-            uint bufferIndex = inputPayload.tick % BUFFER_SIZE;
-
-            StatePayload statePayload = ProcessMovement(inputPayload);
-            StateBuffer[bufferIndex] = statePayload;
-            
-            Manager.BroadcastPacketToClients(new EntityStatePayloadPacket()
+            Manager.BroadcastPacketToClients(new EntityRotatePacket()
             {
                 NetId = NetId,
-                StatePayload = StateBuffer[bufferIndex],
+                Rotation = GlobalRotation,
             });
         }
     }
+
+    private int _targetedPointIndex = 1;
     
-    public void SetDesiredPathLocation(Vector3 pos)
-    {
-        _navAgent.TargetPosition = pos;
-    }
-    
-    [Export]
-    private NavigationAgent3D _navAgent;
+    private Vector3 _targetedLerpPosition = Vector3.Zero;
 
     public WaveManager WaveManager { get; protected set; }
     private Marker3D[] _botPathPointsCache;
+
+    public delegate void BoomerCompletedPathHandler(BoomerEntity boomerEntity);
+
+    public event BoomerCompletedPathHandler OnCompletedPathEvent;
 
 }

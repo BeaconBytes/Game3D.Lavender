@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Godot;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Networking.Packets;
 using Lavender.Common.Networking.Packets.Variants.Entity;
@@ -7,6 +8,7 @@ using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Networking.Packets.Variants.Other;
 using Lavender.Common.Networking.Packets.Variants.Protocol;
 using LiteNetLib.Utils;
+using Environment = System.Environment;
 
 namespace Lavender.Common.Registers.Variants;
 
@@ -31,6 +33,7 @@ public class PacketRegistry
         
         // Entity Updates
         Register<EntityRotatePacket>(PacketType.EntityRotate);
+        Register<EntityMoveToPacket>(PacketType.EntityMoveTo);
         Register<EntityTeleportPacket>(PacketType.EntityTeleport);
         Register<EntityInputPayloadPacket>(PacketType.EntityInputPayload);
         Register<EntityStatePayloadPacket>(PacketType.EntityStatePayload);
@@ -108,7 +111,15 @@ public class PacketRegistry
         List<SubscribeDelegate> callbackList = GetSubscriberCallback(packetType);
         foreach (SubscribeDelegate subscribeDelegate in callbackList)
         {
-            subscribeDelegate?.Invoke(packet, sourceNetId);
+            try
+            {
+                subscribeDelegate.Invoke(packet, sourceNetId);
+            }
+            catch (Exception ex)
+            {
+                GD.PrintErr($"InvokeSubscriberEvent() Error!{Environment.NewLine}{ex}");
+                _callbacks.Remove(subscribeDelegate);
+            }
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Entity.Data;
@@ -12,11 +12,11 @@ namespace Lavender.Common.Entity;
 
 public partial class LivingEntity : BasicEntity, IControllableEntity
 {
-    private float _deltaTimer = 0;
-    public uint CurrentTick { get; protected set; }
+    private double _deltaTimer = 0;
+    public uint CurrentTick { get; protected set; } = 0;
     protected float MinTimeBetweenTicks { get; private set; } = 1f / EnvManager.SERVER_TICK_RATE;
 
-    protected const uint BUFFER_SIZE = 512;
+    protected const uint BUFFER_SIZE = 1024;
 
     public override void _Ready()
     {
@@ -38,11 +38,11 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     public override void _PhysicsProcess(double delta)
     {
         base._PhysicsProcess(delta);
-
+        
         if (!IsSetup) 
             return;
         
-        _deltaTimer += (float)delta;
+        _deltaTimer += delta;
 
         while (_deltaTimer >= MinTimeBetweenTicks)
         {
@@ -51,60 +51,52 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
             CurrentTick++;
         }
     }
+
+    protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None)
+    {
+        Vector3 vel = Velocity;
+
+        float gravityVector = vel.Y;
+        
+        if (IsOnFloor())
+        {
+            gravityVector = 0f;
+        }
+        else
+        {
+            gravityVector -= GravityVal * MinTimeBetweenTicks;
+        }
+
+        float speed = GetMoveSpeed();
+
+        Vector3 realDirection = moveInput.Rotated( Vector3.Up, GlobalTransform.Basis.GetEuler( ).Y ).Normalized( );
+        
+        if (IsOnFloor())
+        {
+            vel = vel.MoveToward(realDirection * speed, Stats.MovementAcceleration * MinTimeBetweenTicks);
+        }
+
+        vel.Y = gravityVector;
+        
+        if (moveFlags.HasFlag(EntityMoveFlags.Jump) && IsOnFloor())
+        {
+            vel.Y += Stats.MovementJumpImpulse;
+        }
+
+        return vel;
+    }
     
     /// <summary>
     /// Process InputPayload and then ApplyMovementChanges(). input's with moveInput.Y==0 will have gravity applied.
     /// </summary>
     protected virtual StatePayload ProcessMovement(InputPayload input)
     {
-        Vector3 vel = Velocity;
+        Vector3 newVel = ProcessMovementVelocity(input.moveInput, input.flagsInput);
 
-        if (input.moveInput.Y == 0)
-        {
-            vel.Y -= GravityVal * MinTimeBetweenTicks;
-        
-            if (vel.Y < 0)
-            {
-                vel.Y -= GravityVal * (Stats.MovementFallMultiplier - 1f) * MinTimeBetweenTicks;
-            }
-            else if (vel.Y > 0)
-            {
-                vel.Y -= GravityVal * (Stats.MovementFallMultiplier - 1f) * MinTimeBetweenTicks;
-            }
-        }
-
-        float drag = (Stats.MovementSpeedBase * Stats.MovementSpeedMultiplier);
-        float speed = (drag * Stats.MovementSprintMultiplier);
-
-        Vector3 cleanDirection = input.moveInput;
-        Vector3 realDirection = cleanDirection.Rotated( Vector3.Up, GlobalTransform.Basis.GetEuler( ).Y ).Normalized( );
-        
-
-        float gravityBuffer = vel.Y;
-        if (realDirection != Vector3.Zero)
-        {
-            vel = vel.MoveToward(speed * realDirection, Stats.MovementAcceleration * MinTimeBetweenTicks);
-        }
-        else
-        {
-            vel = vel.MoveToward(Vector3.Zero, Stats.MovementAcceleration * MinTimeBetweenTicks);
-        }
-
-        // If we arnt flying/swimming, override our velocity's Y to the previously set gravityBuffer
-        if(input.moveInput.Y == 0)
-            vel.Y = gravityBuffer;
-
-
-        if (input.flagsInput.HasFlag(EntityMoveFlags.Jump) && IsOnFloor())
-        {
-            vel.Y += Stats.MovementJumpImpulse;
-        }
-
-
-        Vector3 lookInput = new Vector3(input.lookInput.X, input.lookInput.Y, input.lookInput.Z);
+        Vector3 lookInput = input.lookInput;
         lookInput *= MinTimeBetweenTicks;
 
-        Tuple<Vector3, Vector3> movementResult = ApplyMovementChanges(vel, lookInput);
+        Tuple<Vector3, Vector3> movementResult = ApplyMovementChanges(newVel, lookInput);
         
         return new StatePayload()
         {
@@ -119,9 +111,9 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     protected Tuple<Vector3, Vector3> ApplyMovementChanges(Vector3 newVelocity, Vector3 inputRotate)
     {
         Velocity = newVelocity;
-        MoveAndSlide();
-
-        Vector3 newRot=ApplyMovementRotation(inputRotate);
+        MoveAndSlide(MinTimeBetweenTicks);
+        
+        Vector3 newRot = ApplyMovementRotation(inputRotate);
 
         return new Tuple<Vector3, Vector3>(GlobalPosition, newRot);
     }
@@ -183,6 +175,11 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         if (NetId == (uint)StaticNetId.Null && CurrentTick % (EnvManager.SERVER_TICK_RATE * 5f) == 0)
             GD.PrintErr("NetId of Entity is NULL!");
     }
+
+    protected float GetMoveSpeed()
+    {
+        return (Stats.MovementSpeedBase * Stats.MovementSpeedMultiplier);
+    }
     
     // PACKET EVENT HANDLERS //
     private void OnEntityTeleportPacket(EntityTeleportPacket packet, uint sourceNetId)
@@ -212,6 +209,9 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     }
 
     public uint ControllerParentNetId { get; private set; }
+
+
+    protected bool EnableAutoMoveSlide = false;
     
     
     // Network Syncing //

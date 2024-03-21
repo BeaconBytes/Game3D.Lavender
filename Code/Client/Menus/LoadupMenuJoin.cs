@@ -26,7 +26,6 @@ public partial class LoadupMenuJoin : LoadableMenu
 		{
 			ipAddress = ipAddress.Substring(0, 16);
 		}
-		
 
 		if (EnvManager.JoinServer(ipAddress, 8778))
 		{

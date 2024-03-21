@@ -14,7 +14,10 @@ public partial class PlayerEntity : HumanoidEntity
     {
         base._Ready();
 
+        EnableAutoMoveSlide = true;
+        
         _pauseMenuRootNode.Visible = false;
+        
         SetControllerParent((uint)StaticNetId.Null);
         if (Manager.IsClient)
         {
@@ -34,17 +37,34 @@ public partial class PlayerEntity : HumanoidEntity
             }, this);
         }
     }
+
     public override void _Process(double delta)
     {
         base._Process(delta);
-
+        
         if (Manager.IsServer)
             return;
+
+        if (Manager.ClientNetId != NetId)
+        {
+            GlobalPosition = GlobalPosition.Lerp(_targetedLerpPosition, 1.65f * (float)delta);
+        }
         
         HandleMovementInputs();
-		
-        if(Input.IsActionJustPressed("ui_cancel"))
-            Input.MouseMode = Input.MouseModeEnum.Visible;
+
+        if (Input.IsActionJustPressed("ui_cancel"))
+        {
+            _isPaused = !_isPaused;
+
+            if (_isPaused)
+            {
+                Input.MouseMode = Input.MouseModeEnum.Visible;
+            }
+            else
+            {
+                Input.MouseMode = Input.MouseModeEnum.Captured;
+            }
+        }
 
         if (Input.IsActionJustPressed("debug_action"))
         {
@@ -56,24 +76,23 @@ public partial class PlayerEntity : HumanoidEntity
         }
     }
 
-
-    
-    
-    
     protected override void HandleTick()
     {
         base.HandleTick();
+
+        if (!Enabled)
+            return;
         
         if (Manager.IsClient)
         {
-            if (!LatestServerState.Equals(default(StatePayload)) && 
-                (LastProcessedState.Equals(default(StatePayload)) || !LatestServerState.Equals(LastProcessedState)))
-            {
-                HandleServerReconciliation();
-            }
-
             if (Manager.ClientNetId == NetId)
             {
+                if (!LatestServerState.Equals(default(StatePayload)) && 
+                    (LastProcessedState.Equals(default(StatePayload)) || !LatestServerState.Equals(LastProcessedState)))
+                {
+                    HandleServerReconciliation();
+                }
+                
                 uint bufferIndex = CurrentTick % BUFFER_SIZE;
 		
                 InputPayload inputPayload = new()
@@ -99,7 +118,7 @@ public partial class PlayerEntity : HumanoidEntity
             else
             {
                 LastProcessedState = LatestServerState;
-                GlobalPosition = LatestServerState.position;
+                _targetedLerpPosition = LatestServerState.position;
                 RotateHead(LatestServerState.rotation);
             }
         }
@@ -126,8 +145,10 @@ public partial class PlayerEntity : HumanoidEntity
                 });
             }
         }
-        
     }
+    
+    
+    
     protected virtual void HandleMovementInputs()
     {
         _moveInput = Vector3.Zero;
@@ -188,14 +209,19 @@ public partial class PlayerEntity : HumanoidEntity
         GlobalPosition = packet.CurrentPos;
         RotateHead(packet.CurrentRotation);
     }
-    
+
+
+    private bool _isNewTick = true;
+    private uint _lastNewTick = 0;
     
     private bool _isCommonPlayerEntity = false;
     public bool IsClientHostEnvironment { get; private set; } = false;
 
     private bool _isPaused = false;
-    private float _mouseSensitivity = 0.4f;
+    private float _mouseSensitivity = 0.045f;
 
+    private Vector3 _targetedLerpPosition = Vector3.Zero;
+    
     [Export]
     private Control _pauseMenuRootNode;
 
