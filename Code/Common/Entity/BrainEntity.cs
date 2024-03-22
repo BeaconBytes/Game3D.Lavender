@@ -15,40 +15,25 @@ public partial class BrainEntity : LivingEntity
 
         TeleportedEvent += OnTeleported;
         NavAgent.VelocityComputed += OnVelocityComputed;
+        
         NavAgent.MaxSpeed = GetMoveSpeed();
         
-        
         Register.Packets.Subscribe<EntityMoveToPacket>(OnEntityMoveToPacket);
+
+        if (IsClient)
+            NavAgent.AvoidanceEnabled = false;
     }
 
-    private void OnTeleported(IGameEntity sourceEntity)
-    {
-        Velocity = Vector3.Zero;
-        NavAgent.SetVelocityForced(Vector3.Zero);
-    }
 
     public override void _ExitTree()
     {
-        base._ExitTree();
-        
         TeleportedEvent -= OnTeleported;
         NavAgent.VelocityComputed -= OnVelocityComputed;
+        
+        base._ExitTree();
     }
-
-
-    private void OnEntityMoveToPacket(EntityMoveToPacket packet, uint sourceNetId)
-    {
-        if (!IsClient || packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
-            return;
-
-        _targetedMovePos = packet.Position;
-    }
-    private void OnVelocityComputed(Vector3 safeVelocity)
-    {
-        Velocity = safeVelocity;
-        MoveAndSlide();
-    }
-
+    
+    
     protected override void HandleTick()
     {
         base.HandleTick();
@@ -58,16 +43,6 @@ public partial class BrainEntity : LivingEntity
         
         if (!IsClient)
         {
-            Vector3 curPos = GlobalPosition;
-            Vector3 nextPos = NavAgent.GetNextPathPosition();
-
-            Vector3 moveDirVec = curPos.DirectionTo(nextPos);
-
-            Vector3 newVel = ProcessMovementVelocity(moveDirVec);
-            Velocity = newVel;
-            MoveAndSlide(MinTimeBetweenTicks);
-            NavAgent.Velocity = newVel;
-
             if (_lastSyncedPosition == GlobalPosition)
                 return;
             Manager.BroadcastPacketToClients(new EntityMoveToPacket()
@@ -89,14 +64,63 @@ public partial class BrainEntity : LivingEntity
         
         if (IsClient)
         {
-            // GlobalPosition = GlobalPosition.Lerp(_targetedMovePos, (float)delta * 1.65f);
-            GlobalPosition = _targetedMovePos;
+            GlobalPosition = GlobalPosition.Lerp(_targetedMovePos, (float)delta * 7f);
+        }
+    }
+
+    public override void _PhysicsProcess(double delta)
+    {
+        base._PhysicsProcess(delta);
+        
+        if(!IsClient)
+        {
+            if (NavAgent.IsNavigationFinished())
+            {
+                Vector3 newVel = ProcessMovementVelocity(Vector3.Zero, deltaTime: (float)delta);
+
+                OnVelocityComputed(newVel);
+            }
+            else
+            {
+                Vector3 curPos = GlobalPosition;
+                Vector3 nextPos = NavAgent.GetNextPathPosition();
+
+                Vector3 newDirectionVector = curPos.DirectionTo(nextPos);
+                Vector3 newVel = ProcessMovementVelocity(newDirectionVector, deltaTime: (float)delta);
+            
+                if (NavAgent.AvoidanceEnabled)
+                    NavAgent.Velocity = newVel;
+                else
+                    OnVelocityComputed(newVel);
+            }
+            
         }
     }
 
     public void SetDesiredPathLocation(Vector3 pos)
     {
         NavAgent.TargetPosition = pos;
+        LookAt(new Vector3(pos.X, GlobalPosition.Y, pos.Z));
+        SnapRotationTo(GlobalRotation);
+    }
+    
+    // Event Handlers //
+    private void OnEntityMoveToPacket(EntityMoveToPacket packet, uint sourceNetId)
+    {
+        if (!IsClient || packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
+            return;
+
+        _targetedMovePos = packet.Position;
+    }
+    private void OnVelocityComputed(Vector3 safeVelocity)
+    {
+        Velocity = safeVelocity;
+        MoveAndSlide();
+    }
+    private void OnTeleported(IGameEntity sourceEntity)
+    {
+        Velocity = Vector3.Zero;
+        NavAgent.SetVelocityForced(Vector3.Zero);
     }
 
     [Export]

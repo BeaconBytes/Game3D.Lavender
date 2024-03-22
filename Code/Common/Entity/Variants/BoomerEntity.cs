@@ -10,14 +10,14 @@ namespace Lavender.Common.Entity.Variants;
 
 public partial class BoomerEntity : BrainEntity, IWaveEnemy
 {
-    
     public void WaveSetup(Marker3D[] botPathPoints, WaveManager waveManager)
     {
         WaveManager = waveManager;
         _botPathPointsCache = botPathPoints;
 
         Teleport(_botPathPointsCache[0].GlobalPosition);
-        SetDesiredPathLocation(_botPathPointsCache[1].GlobalPosition);
+        _targetedPointIndex = 0;
+        TargetNextPoint();
     }
 
     private void TargetNextPoint()
@@ -29,10 +29,8 @@ public partial class BoomerEntity : BrainEntity, IWaveEnemy
 
         _targetedPointIndex++;
         SetDesiredPathLocation(_botPathPointsCache[_targetedPointIndex].GlobalPosition);
-        LookAt(new Vector3(_botPathPointsCache[_targetedPointIndex].GlobalPosition.X, GlobalPosition.Y, _botPathPointsCache[_targetedPointIndex].GlobalPosition.Z));
-        SnapRotationTo(GlobalRotation);
     }
-
+    
     protected override void HandleTick()
     {
         base.HandleTick();
@@ -42,7 +40,8 @@ public partial class BoomerEntity : BrainEntity, IWaveEnemy
 
         if (IsClient) 
             return;
-        if (_botPathPointsCache[_targetedPointIndex].GlobalPosition.DistanceSquaredTo(GlobalPosition) <= 4f)
+        
+        if (NavAgent.IsTargetReached())
         {
             // Reached the targeted path position/point
             if (_targetedPointIndex + 1 >= _botPathPointsCache.Length)
@@ -55,18 +54,6 @@ public partial class BoomerEntity : BrainEntity, IWaveEnemy
 
     }
 
-    public void SnapRotationTo(Vector3 rotation)
-    {
-        GlobalRotation = rotation;
-        if (Manager is ServerManager)
-        {
-            Manager.BroadcastPacketToClients(new EntityRotatePacket()
-            {
-                NetId = NetId,
-                Rotation = GlobalRotation,
-            });
-        }
-    }
 
     private int _targetedPointIndex = 1;
     

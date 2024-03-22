@@ -12,7 +12,7 @@ namespace Lavender.Common.Managers;
 
 public partial class WaveManager : LoadableNode
 {
-    private const float WAVE_STARTUP_TIME = 10f;
+    private const float WAVE_STARTUP_TIME = 3f;
     private const float MIN_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
     
     public void Setup(GameManager gameManager)
@@ -137,7 +137,7 @@ public partial class WaveManager : LoadableNode
             _waveStartupCooldown = -1f;
             
             _currentLevel++;
-            _enemiesToSpawnCount = _currentLevel * 4;
+            _enemiesToSpawnCount = 1;
         }
         else
         {

@@ -94,11 +94,13 @@ public partial class PlayerEntity : HumanoidEntity
                 }
                 
                 uint bufferIndex = CurrentTick % BUFFER_SIZE;
-		
+
+                Vector3 realMoveDirection = _moveInput.Rotated( Vector3.Up, GlobalTransform.Basis.GetEuler( ).Y ).Normalized( );
+                
                 InputPayload inputPayload = new()
                 {
                     tick  = CurrentTick,
-                    moveInput = _moveInput,
+                    moveInput = realMoveDirection,
                     lookInput = _lookInput,
                     flagsInput = _flagsInput,
                 };

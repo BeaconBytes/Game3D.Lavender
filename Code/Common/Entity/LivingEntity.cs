@@ -14,7 +14,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
 {
     private double _deltaTimer = 0;
     public uint CurrentTick { get; protected set; } = 0;
-    protected float MinTimeBetweenTicks { get; private set; } = 1f / EnvManager.SERVER_TICK_RATE;
+    protected const float NET_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
 
     protected const uint BUFFER_SIZE = 1024;
 
@@ -24,9 +24,10 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         Stats = new EntityStats();
         
         Register.Packets.Subscribe<EntityStatePayloadPacket>(OnStatePayloadPacket);
-        if (Manager.IsClient)
+        if (IsClient)
         {
             Register.Packets.Subscribe<EntityTeleportPacket>(OnEntityTeleportPacket);
+            Register.Packets.Subscribe<EntityRotatePacket>(OnEntityRotatePacket);
         }
         else
         {
@@ -44,15 +45,15 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         
         _deltaTimer += delta;
 
-        while (_deltaTimer >= MinTimeBetweenTicks)
+        while (_deltaTimer >= NET_TICK_TIME)
         {
-            _deltaTimer -= MinTimeBetweenTicks;
+            _deltaTimer -= NET_TICK_TIME;
             HandleTick();
             CurrentTick++;
         }
     }
 
-    protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None)
+    protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None, float deltaTime = NET_TICK_TIME)
     {
         Vector3 vel = Velocity;
 
@@ -64,16 +65,14 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         }
         else
         {
-            gravityVector -= GravityVal * MinTimeBetweenTicks;
+            gravityVector -= GravityVal * deltaTime;
         }
 
         float speed = GetMoveSpeed();
-
-        Vector3 realDirection = moveInput.Rotated( Vector3.Up, GlobalTransform.Basis.GetEuler( ).Y ).Normalized( );
         
         if (IsOnFloor())
         {
-            vel = vel.MoveToward(realDirection * speed, Stats.MovementAcceleration * MinTimeBetweenTicks);
+            vel = vel.MoveToward(moveInput * speed, Stats.MovementAcceleration * deltaTime);
         }
 
         vel.Y = gravityVector;
@@ -94,7 +93,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         Vector3 newVel = ProcessMovementVelocity(input.moveInput, input.flagsInput);
 
         Vector3 lookInput = input.lookInput;
-        lookInput *= MinTimeBetweenTicks;
+        lookInput *= NET_TICK_TIME;
 
         Tuple<Vector3, Vector3> movementResult = ApplyMovementChanges(newVel, lookInput);
         
@@ -111,7 +110,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     protected Tuple<Vector3, Vector3> ApplyMovementChanges(Vector3 newVelocity, Vector3 inputRotate)
     {
         Velocity = newVelocity;
-        MoveAndSlide(MinTimeBetweenTicks);
+        MoveAndSlide(NET_TICK_TIME);
         
         Vector3 newRot = ApplyMovementRotation(inputRotate);
 
@@ -169,6 +168,20 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         RotateZ(inputRotate.Z);
         return GlobalRotation;
     }
+    
+    
+    public void SnapRotationTo(Vector3 rotation)
+    {
+        GlobalRotation = rotation;
+        if (!IsClient)
+        {
+            Manager.BroadcastPacketToClients(new EntityRotatePacket()
+            {
+                NetId = NetId,
+                Rotation = GlobalRotation,
+            });
+        }
+    }
 
     protected virtual void HandleTick()
     {
@@ -187,6 +200,13 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         if (packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
             return;
         Teleport(packet.Position);
+    }
+    private void OnEntityRotatePacket(EntityRotatePacket packet, uint sourceNetId)
+    {
+        if (packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
+            return;
+
+        GlobalRotation = packet.Rotation;
     }
     private void OnInputPayloadPacket(EntityInputPayloadPacket packet, uint sourceNetId)
     {
