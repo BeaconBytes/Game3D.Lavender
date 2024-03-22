@@ -47,7 +47,7 @@ public partial class PlayerEntity : HumanoidEntity
 
         if (Manager.ClientNetId != NetId)
         {
-            GlobalPosition = GlobalPosition.Lerp(_targetedLerpPosition, 1.65f * (float)delta);
+            GlobalPosition = GlobalPosition.Lerp(_targetedLerpPosition, GetMoveSpeed() * (float)delta);
         }
         
         HandleMovementInputs();
