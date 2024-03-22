@@ -71,6 +71,9 @@ public partial class BrainEntity : LivingEntity
     public override void _PhysicsProcess(double delta)
     {
         base._PhysicsProcess(delta);
+
+        if (Destroyed)
+            return;
         
         if(!IsClient)
         {
@@ -103,6 +106,11 @@ public partial class BrainEntity : LivingEntity
         LookAt(new Vector3(pos.X, GlobalPosition.Y, pos.Z));
         SnapRotationTo(GlobalRotation);
     }
+
+    protected void TriggerPathCompletedEvent()
+    {
+        OnCompletedPathEvent?.Invoke(this);
+    }
     
     // Event Handlers //
     private void OnEntityMoveToPacket(EntityMoveToPacket packet, uint sourceNetId)
@@ -128,4 +136,8 @@ public partial class BrainEntity : LivingEntity
 
     private Vector3 _targetedMovePos = Vector3.Zero;
     private Vector3 _lastSyncedPosition = Vector3.Zero;
+
+    public delegate void BrainCompletedPathHandler(BrainEntity brainEntity);
+
+    public event BrainCompletedPathHandler OnCompletedPathEvent;
 }

@@ -128,6 +128,7 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         
         Dead = true;
         Destroyed = true;
+        Enabled = false;
     }
 
     /// <summary>

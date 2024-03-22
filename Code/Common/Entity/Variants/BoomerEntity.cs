@@ -47,7 +47,7 @@ public partial class BoomerEntity : BrainEntity, IWaveEnemy
             if (_targetedPointIndex + 1 >= _botPathPointsCache.Length)
             {
                 // Finished the path.
-                OnCompletedPathEvent?.Invoke(this);
+                TriggerPathCompletedEvent();
             }
             TargetNextPoint();
         }
@@ -61,9 +61,5 @@ public partial class BoomerEntity : BrainEntity, IWaveEnemy
 
     public WaveManager WaveManager { get; protected set; }
     private Marker3D[] _botPathPointsCache;
-
-    public delegate void BoomerCompletedPathHandler(BoomerEntity boomerEntity);
-
-    public event BoomerCompletedPathHandler OnCompletedPathEvent;
 
 }

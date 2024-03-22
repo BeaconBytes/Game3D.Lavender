@@ -28,12 +28,10 @@ NavAgent = NodePath("NavigationAgent3D")
 ServerHiddenNodes = [NodePath("Body"), NodePath("Head"), NodePath("EyeLeft"), NodePath("EyeLeft2")]
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.58
 avoidance_enabled = true
 height = 2.0
-debug_enabled = true
-debug_use_custom = true
 debug_path_custom_color = Color(1, 0, 0, 1)
-debug_path_custom_point_size = 12.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.164679, 0)

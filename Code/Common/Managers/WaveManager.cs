@@ -12,7 +12,7 @@ namespace Lavender.Common.Managers;
 
 public partial class WaveManager : LoadableNode
 {
-    private const float WAVE_STARTUP_TIME = 3f;
+    private const float WAVE_STARTUP_TIME = 5f;
     private const float MIN_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
     
     public void Setup(GameManager gameManager)
@@ -22,6 +22,19 @@ public partial class WaveManager : LoadableNode
 
         Manager.EntitySpawnedEvent += OnSpawnedEntity;
         Manager.EntityDestroyedEvent += OnDestroyedEntity;
+    }
+    protected override void Unload()
+    {
+        if (Manager == null)
+            return;
+
+        Manager.EntitySpawnedEvent -= OnSpawnedEntity;
+        Manager.EntityDestroyedEvent -= OnDestroyedEntity;
+        
+        foreach (KeyValuePair<uint,LivingEntity> pair in _spawnedEnemies)
+        {
+            Manager.DestroyEntity(pair.Value);
+        }
     }
 
     
@@ -39,23 +52,13 @@ public partial class WaveManager : LoadableNode
             boomerEntity.OnCompletedPathEvent -= OnCompletedBotPath;
         }
     }
-    private void OnCompletedBotPath(BoomerEntity boomerEntity)
+    private void OnCompletedBotPath(BrainEntity brainEntity)
     {
-        Manager.DestroyEntity(boomerEntity);
+        Manager.DestroyEntity(brainEntity);
     }
     
 
 
-    protected override void Unload()
-    {
-        if (Manager == null)
-            return;
-        
-        foreach (KeyValuePair<uint,LivingEntity> pair in _spawnedEnemies)
-        {
-            Manager.DestroyEntity(pair.Value);
-        }
-    }
 
     
     protected virtual void HandleTick()
@@ -133,11 +136,10 @@ public partial class WaveManager : LoadableNode
         else if (newState is WaveState.Active && CurrentWaveState is WaveState.Starting)
         {
             // Wave countdown completed. Start spawning enemies!
-            // TODO: Spawn enemies
             _waveStartupCooldown = -1f;
             
             _currentLevel++;
-            _enemiesToSpawnCount = 1;
+            _enemiesToSpawnCount = _currentLevel * 10;
         }
         else
         {
@@ -147,7 +149,7 @@ public partial class WaveManager : LoadableNode
         GD.Print($"WaveManager.SetWaveState({newState.ToString()}); where `CurrentWaveStart`='{CurrentWaveState.ToString()}'");
         CurrentWaveState = newState;
         
-        WaveStateChanagedEvent?.Invoke(this);
+        WaveStateChangedEvent?.Invoke(this);
     }
 
     public override void _Process(double delta)
@@ -188,5 +190,5 @@ public partial class WaveManager : LoadableNode
     
     
     // EVENTS //
-    public event WaveStateChangedHandler WaveStateChanagedEvent;
+    public event WaveStateChangedHandler WaveStateChangedEvent;
 }

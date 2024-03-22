@@ -16,7 +16,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     public uint CurrentTick { get; protected set; } = 0;
     protected const float NET_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
 
-    protected const uint BUFFER_SIZE = 1024;
+    protected const uint BUFFER_SIZE = 512;
 
     public override void _Ready()
     {

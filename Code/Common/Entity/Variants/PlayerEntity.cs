@@ -19,7 +19,7 @@ public partial class PlayerEntity : HumanoidEntity
         _pauseMenuRootNode.Visible = false;
         
         SetControllerParent((uint)StaticNetId.Null);
-        if (Manager.IsClient)
+        if (IsClient)
         {
             Input.MouseMode = Input.MouseModeEnum.Captured;
             if(Manager.ClientNetId == NetId)

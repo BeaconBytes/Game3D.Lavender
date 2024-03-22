@@ -38,6 +38,7 @@ public partial class ServerManager : GameManager
 		Register.Packets.Subscribe<AuthMePacket>(OnAuthMePacket);
 		
 		EntitySpawnedEvent += OnEntitySpawned;
+		EntityDestroyedEvent += OnEntityDestroyed;
 		
 		GD.Print($"Server started on port {EnvManager.ServerPort}");
 
@@ -61,14 +62,10 @@ public partial class ServerManager : GameManager
 		_netListener.PeerDisconnectedEvent -= OnNetPeerDisconnected;
 		
 		EntitySpawnedEvent -= OnEntitySpawned;
+		EntityDestroyedEvent -= OnEntityDestroyed;
 
 		_netManager.Stop();
 		base.Unload();
-	}
-
-	protected override void Start()
-	{
-		
 	}
 
 	protected override void ApplyRegistryDefaults()
@@ -260,6 +257,15 @@ public partial class ServerManager : GameManager
 		{
 			PlayerEntities.Add(netId, playerEntity);
 		}
+	}
+	private void OnEntityDestroyed(IGameEntity gameEntity)
+	{
+		uint netId = gameEntity.NetId;
+
+		BroadcastPacketToClients(new DestroyEntityPacket()
+		{
+			NetId = netId,
+		});
 	}
 
 	protected string MapName = "default";
