@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://csj5qrlx4w0ea"]
+[gd_scene load_steps=10 format=3 uid="uid://csj5qrlx4w0ea"]
 
 [ext_resource type="Script" path="res://Code/Common/Entity/Variants/PlayerEntity.cs" id="1_r05bv"]
 [ext_resource type="Theme" uid="uid://t24udtnrkd2d" path="res://Assets/Themes/menu.theme" id="2_yva6r"]
+[ext_resource type="Script" path="res://Code/Client/Menus/ClientHud.cs" id="3_n3h86"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_kjedo"]
 
@@ -17,19 +18,28 @@ height = 1.4
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1rcej"]
 bg_color = Color(0.819608, 0.34902, 0.988235, 0.0705882)
 
-[node name="PlayerEntity" type="CharacterBody3D" node_paths=PackedStringArray("_pauseMenuRootNode", "_camera", "HeadNode", "ServerHiddenNodes")]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bbrsp"]
+
+[node name="PlayerEntity" type="CharacterBody3D" node_paths=PackedStringArray("_pauseMenuRootNode", "_clientHudRootNode", "_camera", "HeadNode", "ServerHiddenNodes")]
 collision_layer = 0
 collision_mask = 0
 platform_floor_layers = 1
 platform_wall_layers = 1
 script = ExtResource("1_r05bv")
 _pauseMenuRootNode = NodePath("PauseMenuRoot")
+_clientHudRootNode = NodePath("HUDRoot")
 _camera = NodePath("Head/Camera3D")
 HeadNode = NodePath("Head")
 ServerHiddenNodes = [NodePath("Head/Camera3D"), NodePath("Head/MeshInstance3D"), NodePath("Head/Eyes/MeshInstance3D"), NodePath("Body/MeshInstance3D"), null]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("CapsuleShape3D_kjedo")
+
+[node name="NavigationObstacle3D" type="NavigationObstacle3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.02244, 0)
+height = 2.0
+vertices = PackedVector3Array(-0.5, 0, -0.5, -0.5, 0, 0.5, 0.5, 0, 0.5, 0.5, 0, -0.5)
+avoidance_layers = 129
 
 [node name="Head" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0)
@@ -54,10 +64,12 @@ mesh = SubResource("CylinderMesh_fxi5x")
 skeleton = NodePath("../../..")
 
 [node name="PauseMenuRoot" type="Control" parent="."]
+visible = false
 layout_mode = 3
 anchor_right = 1.38889
 anchor_bottom = 1.38889
-offset_bottom = 6.10352e-05
+offset_right = -0.00134277
+offset_bottom = -0.000732422
 metadata/_edit_use_anchors_ = true
 
 [node name="BackgroundPanel" type="Panel" parent="PauseMenuRoot"]
@@ -85,3 +97,41 @@ theme_override_constants/outline_size = 5
 theme_override_font_sizes/font_size = 72
 text = "PAUSED"
 uppercase = true
+
+[node name="HUDRoot" type="Control" parent="." node_paths=PackedStringArray("_notificationLabelNode")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 1
+script = ExtResource("3_n3h86")
+_notificationLabelNode = NodePath("PanelContainer/NotificationLabel")
+metadata/_edit_use_anchors_ = true
+
+[node name="PanelContainer" type="PanelContainer" parent="HUDRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.282986
+anchor_right = 0.717014
+anchor_bottom = 0.197531
+grow_horizontal = 2
+mouse_filter = 1
+theme_override_styles/panel = SubResource("StyleBoxEmpty_bbrsp")
+metadata/_edit_use_anchors_ = true
+
+[node name="NotificationLabel" type="Label" parent="HUDRoot/PanelContainer"]
+auto_translate_mode = 1
+custom_minimum_size = Vector2(500, 128)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 0
+mouse_filter = 1
+theme = ExtResource("2_yva6r")
+theme_type_variation = &"HeaderLarge"
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+autowrap_mode = 3

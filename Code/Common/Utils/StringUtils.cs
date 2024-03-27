@@ -4,7 +4,7 @@ namespace Lavender.Common.Utils;
 
 public static class StringUtils
 {
-    public static string Sanitize(string input, int maxLength = 16)
+    public static string Sanitize(string input, int maxLength = 16, bool allowSpaces = true)
     {
         // Clamp the length
         if (input.Length > maxLength)
@@ -14,7 +14,7 @@ public static class StringUtils
         input = input.Trim('\0');
         
         // Only allow alpha-numeric digits AND '_'
-        input = new string(input.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());
+        input = new string(input.Where(c => char.IsLetterOrDigit(c) || c == '_' || (allowSpaces && c == ' ')).ToArray());
         return input;
     }
 }

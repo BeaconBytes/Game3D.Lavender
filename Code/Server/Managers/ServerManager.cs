@@ -139,7 +139,7 @@ public partial class ServerManager : GameManager
 	
 	private void OnAuthMePacket(AuthMePacket packet, uint sourceNetId)
 	{
-		string name = StringUtils.Sanitize(packet.Username);
+		string name = StringUtils.Sanitize(packet.Username, 16, false);
 
 		PlayerEntity playerSpawned = SpawnEntity<PlayerEntity>(EntityType.Player, sourceNetId);
 		playerSpawned.SetName(name); 

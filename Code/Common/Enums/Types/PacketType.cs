@@ -15,9 +15,9 @@ public enum PacketType : byte
     SetupClient,
     Disconnect,
     
-    // Setup
+    // World/Map
     WorldSetup,
-    SetClientHost,
+    MapNotification,
 
     // Entity Management
     SpawnEntity,
@@ -32,9 +32,5 @@ public enum PacketType : byte
     EntityStatePayload,
 
     // Structures
-
-    // Mapping
-	
-    // UI
-    Notification,
+    
 }

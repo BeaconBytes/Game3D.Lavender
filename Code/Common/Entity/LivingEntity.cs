@@ -12,15 +12,10 @@ namespace Lavender.Common.Entity;
 
 public partial class LivingEntity : BasicEntity, IControllableEntity
 {
-    private double _deltaTimer = 0;
-    public uint CurrentTick { get; protected set; } = 0;
-    protected const float NET_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
 
-    protected const uint BUFFER_SIZE = 512;
-
-    public override void _Ready()
+    public override void _EnterTree()
     {
-        base._Ready();
+        base._EnterTree();
         Stats = new EntityStats();
         
         Register.Packets.Subscribe<EntityStatePayloadPacket>(OnStatePayloadPacket);
@@ -35,23 +30,6 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         }
     }
 
-
-    public override void _PhysicsProcess(double delta)
-    {
-        base._PhysicsProcess(delta);
-        
-        if (!IsSetup) 
-            return;
-        
-        _deltaTimer += delta;
-
-        while (_deltaTimer >= NET_TICK_TIME)
-        {
-            _deltaTimer -= NET_TICK_TIME;
-            HandleTick();
-            CurrentTick++;
-        }
-    }
 
     protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None, float deltaTime = NET_TICK_TIME)
     {
@@ -168,26 +146,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         RotateZ(inputRotate.Z);
         return GlobalRotation;
     }
-    
-    
-    public void SnapRotationTo(Vector3 rotation)
-    {
-        GlobalRotation = rotation;
-        if (!IsClient)
-        {
-            Manager.BroadcastPacketToClients(new EntityRotatePacket()
-            {
-                NetId = NetId,
-                Rotation = GlobalRotation,
-            });
-        }
-    }
 
-    protected virtual void HandleTick()
-    {
-        if (NetId == (uint)StaticNetId.Null && CurrentTick % (EnvManager.SERVER_TICK_RATE * 5f) == 0)
-            GD.PrintErr("NetId of Entity is NULL!");
-    }
 
     protected float GetMoveSpeed()
     {

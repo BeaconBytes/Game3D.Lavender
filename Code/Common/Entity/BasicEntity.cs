@@ -94,8 +94,28 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         }
     }
 
-    public GameManager Manager { get; private set; } = null;
-    public MapManager MapManager { get; private set; } = null;
+
+    public override void _PhysicsProcess(double delta)
+    {
+        base._PhysicsProcess(delta);
+        
+        if (!IsSetup) 
+            return;
+        
+        _deltaTimer += delta;
+
+        while (_deltaTimer >= NET_TICK_TIME)
+        {
+            _deltaTimer -= NET_TICK_TIME;
+            HandleTick();
+            CurrentTick++;
+        }
+    }
+    protected virtual void HandleTick()
+    {
+        if (NetId == (uint)StaticNetId.Null && CurrentTick % (EnvManager.SERVER_TICK_RATE * 10f) == 0)
+            GD.PrintErr("NetId of Entity is NULL!");
+    }
 
     public uint NetId { get; private set; } = (uint)StaticNetId.Null;
     public void Teleport(Vector3 position)
@@ -113,9 +133,17 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         TeleportedEvent?.Invoke(this);
     }
 
-    public void RotateTo(Vector3 rotation)
+    public void SnapRotationTo(Vector3 rotation)
     {
         GlobalRotation = rotation;
+        if (!IsClient)
+        {
+            Manager.BroadcastPacketToClients(new EntityRotatePacket()
+            {
+                NetId = NetId,
+                Rotation = GlobalRotation,
+            });
+        }
     }
 
     /// <summary>
@@ -151,6 +179,13 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         DisplayName = name;
     }
 
+    private double _deltaTimer = 0;
+    protected uint CurrentTick { get; set; } = 0;
+    protected const float NET_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
+
+    protected const uint BUFFER_SIZE = 512;
+    public GameManager Manager { get; private set; } = null;
+    public MapManager MapManager { get; private set; } = null;
     public string DisplayName { get; private set; }
     
     public bool IsClient { get; private set; }

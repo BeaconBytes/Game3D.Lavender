@@ -5,26 +5,35 @@
 
 [sub_resource type="LabelSettings" id="LabelSettings_kr84n"]
 font = ExtResource("1_1jybb")
-font_size = 42
-outline_size = 2
+font_size = 22
+font_color = Color(1, 0.250435, 0.427013, 1)
+outline_size = 1
 outline_color = Color(0, 0, 0, 1)
-shadow_size = 0
+shadow_size = 2
+shadow_color = Color(0, 0, 0, 1)
+shadow_offset = Vector2(2, 2)
 
 [node name="ClientEnv" type="Node"]
 
-[node name="Control" type="Control" parent="."]
+[node name="OverlayUi" type="Control" parent="."]
 layout_mode = 3
-anchors_preset = 0
-offset_right = 1152.0
-offset_bottom = 648.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 mouse_filter = 1
+metadata/_edit_use_anchors_ = true
 
-[node name="Label" type="Label" parent="Control"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
-text = "DEVELOPMENT BUILD"
+[node name="Label" type="Label" parent="OverlayUi"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.958333
+anchor_right = 0.0859375
+anchor_bottom = 1.0
+grow_vertical = 0
+mouse_filter = 1
+text = "Dev Build"
 label_settings = SubResource("LabelSettings_kr84n")
+metadata/_edit_use_anchors_ = true
 
 [node name="Manager" type="Node" parent="." node_paths=PackedStringArray("MapSocketNode")]
 script = ExtResource("1_0ja6s")

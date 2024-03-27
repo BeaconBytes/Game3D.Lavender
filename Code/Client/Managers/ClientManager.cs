@@ -108,8 +108,6 @@ public partial class ClientManager : GameManager
 		{
 			ClientEntity = gameEntity;
 		}
-		
-		GD.Print($"Spawned EntityType.{toSpawnType}");
 	}
 	private void OnDestroyEntityPacket(DestroyEntityPacket packet, uint sourceNetId)
 	{

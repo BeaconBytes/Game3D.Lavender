@@ -1,7 +1,9 @@
-﻿using Godot;
+using Godot;
+using Lavender.Client.Menus;
 using Lavender.Common.Entity.Data;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
+using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Networking.Packets.Variants.Other;
 using Lavender.Common.Registers;
@@ -36,6 +38,18 @@ public partial class PlayerEntity : HumanoidEntity
                 CurrentRotation = GetRotationWithHead(),
             }, this);
         }
+    }
+
+    public override void Setup(uint netId, GameManager manager)
+    {
+        base.Setup(netId, manager);
+        if (_clientHudRootNode == null)
+        {
+            GD.PrintErr($"[PlayerEntity#Setup]: _clientHudRootNode is not set in the editor!");
+            return;
+        }
+
+        _clientHudRootNode.Setup(this);
     }
 
     public override void _Process(double delta)
@@ -226,6 +240,9 @@ public partial class PlayerEntity : HumanoidEntity
     
     [Export]
     private Control _pauseMenuRootNode;
+
+    [Export]
+    private ClientHud _clientHudRootNode;
 
     [Export]
     private Camera3D _camera;

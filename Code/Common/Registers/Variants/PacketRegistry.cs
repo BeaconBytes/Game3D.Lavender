@@ -5,6 +5,7 @@ using Lavender.Common.Enums.Types;
 using Lavender.Common.Networking.Packets;
 using Lavender.Common.Networking.Packets.Variants.Entity;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
+using Lavender.Common.Networking.Packets.Variants.Mapping;
 using Lavender.Common.Networking.Packets.Variants.Other;
 using Lavender.Common.Networking.Packets.Variants.Protocol;
 using LiteNetLib.Utils;
@@ -25,6 +26,9 @@ public class PacketRegistry
         
         // Setup
         Register<WorldSetupPacket>(PacketType.WorldSetup);
+        
+        // World/Map
+        Register<MapNotificationPacket>(PacketType.MapNotification);
         
         // Entity
         Register<SpawnEntityPacket>(PacketType.SpawnEntity);
@@ -136,6 +140,11 @@ public class PacketRegistry
         }
 
         return result;
+    }
+
+    internal void Register<T>(object onMapNotificationPacket)
+    {
+        throw new NotImplementedException();
     }
 
     private readonly Dictionary<PacketType, GamePacket> _entries = new();

@@ -6,15 +6,16 @@ using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.States;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Interfaces.Management.Waves;
+using Lavender.Common.Networking.Packets.Variants.Mapping;
 using Lavender.Server.Managers;
 
 namespace Lavender.Common.Managers;
 
 public partial class WaveManager : LoadableNode
 {
-    private const float WAVE_STARTUP_TIME = 5f;
+    private const float WAVE_STARTUP_TIME = 8f;
     private const float MIN_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
-    
+
     public void Setup(GameManager gameManager)
     {
         Manager = gameManager;
@@ -30,14 +31,14 @@ public partial class WaveManager : LoadableNode
 
         Manager.EntitySpawnedEvent -= OnSpawnedEntity;
         Manager.EntityDestroyedEvent -= OnDestroyedEntity;
-        
-        foreach (KeyValuePair<uint,LivingEntity> pair in _spawnedEnemies)
+
+        foreach (KeyValuePair<uint, LivingEntity> pair in _spawnedEnemies)
         {
             Manager.DestroyEntity(pair.Value);
         }
     }
 
-    
+
     private void OnSpawnedEntity(IGameEntity gameEntity)
     {
         if (gameEntity is BoomerEntity boomerEntity)
@@ -56,14 +57,15 @@ public partial class WaveManager : LoadableNode
     {
         Manager.DestroyEntity(brainEntity);
     }
-    
 
 
-
-    
     protected virtual void HandleTick()
     {
-        if (CurrentWaveState == WaveState.Starting)
+        if (CurrentWaveState is WaveState.Stopped)
+        {
+            SetWaveState(WaveState.Starting);
+        }
+        else if (CurrentWaveState == WaveState.Starting)
         {
             if (_waveStartupCooldown > 0)
             {
@@ -74,21 +76,34 @@ public partial class WaveManager : LoadableNode
                     // Start the wave.
                     SetWaveState(WaveState.Active);
                 }
+                else if(Manager.IsServer)
+                {
+                    int curCountdownSecond = Mathf.FloorToInt(_waveStartupCooldown);
+                    if (curCountdownSecond < _lastNotifiedCountdownSecond)
+                    {
+                        _lastNotifiedCountdownSecond = curCountdownSecond;
+                        Manager.BroadcastPacketToClients(new MapNotificationPacket()
+                        {
+                            Message = $"Starting in {curCountdownSecond}",
+                            TimeLengthSeconds = 1f,
+                        });
+                    }
+                }
             }
         }
         else if (CurrentWaveState == WaveState.Active)
         {
             // Wave currently running/active
-            
+
             // If there are enemies left to spawn, AND its been at least 4 seconds(equivalently, in ticks) then:
             if (_enemiesToSpawnCount > 0 && _currentTick % (EnvManager.SERVER_TICK_RATE * 4f) == 0)
             {
                 BoomerEntity boomerEntity = Manager.SpawnEntity<BoomerEntity>(EntityType.Boomer);
                 _spawnedEnemies.Add(boomerEntity.NetId, boomerEntity);
-                
+
                 // TODO: Better way to convert botPathPoints into a System Array
-                boomerEntity.WaveSetup(new List<Marker3D>(botPathPoints).ToArray(), this);
-                
+                boomerEntity.SetupWave(new List<Marker3D>(botPathPoints).ToArray(), this);
+
                 _enemiesToSpawnCount--;
             }
             else if (_enemiesToSpawnCount <= 0 && _spawnedEnemies.Count == 0)
@@ -97,8 +112,8 @@ public partial class WaveManager : LoadableNode
             }
         }
     }
-    
-    
+
+
     public void StartWave()
     {
         if (CurrentWaveState == WaveState.Stopped)
@@ -118,11 +133,11 @@ public partial class WaveManager : LoadableNode
     {
         if (newState == CurrentWaveState)
             return;
-        
+
         if (newState is WaveState.Stopped or WaveState.Finished && CurrentWaveState == WaveState.Active)
         {
             // Stop the wave
-            foreach (KeyValuePair<uint,LivingEntity> pair in _spawnedEnemies)
+            foreach (KeyValuePair<uint, LivingEntity> pair in _spawnedEnemies)
             {
                 Manager.DestroyEntity(pair.Value);
             }
@@ -132,23 +147,24 @@ public partial class WaveManager : LoadableNode
         {
             // Start the wave countdown to enemies arriving
             _waveStartupCooldown = WAVE_STARTUP_TIME;
+            _lastNotifiedCountdownSecond = Mathf.CeilToInt(WAVE_STARTUP_TIME) + 1;
         }
         else if (newState is WaveState.Active && CurrentWaveState is WaveState.Starting)
         {
             // Wave countdown completed. Start spawning enemies!
             _waveStartupCooldown = -1f;
-            
+
             _currentLevel++;
-            _enemiesToSpawnCount = _currentLevel * 10;
+            _enemiesToSpawnCount = _currentLevel * 12;
         }
         else
         {
             GD.PrintErr($"[ERROR]WaveManager.SetWaveState({newState.ToString()}); where `CurrentWaveStart`='{CurrentWaveState.ToString()}' was called in an incorrect order!");
         }
-        
+
         GD.Print($"WaveManager.SetWaveState({newState.ToString()}); where `CurrentWaveStart`='{CurrentWaveState.ToString()}'");
         CurrentWaveState = newState;
-        
+
         WaveStateChangedEvent?.Invoke(this);
     }
 
@@ -156,7 +172,7 @@ public partial class WaveManager : LoadableNode
     {
         if (Manager is not ServerManager)
             return;
-        
+
         _deltaTimer += (float)delta;
 
         while (_deltaTimer >= MIN_TICK_TIME)
@@ -177,18 +193,21 @@ public partial class WaveManager : LoadableNode
     private uint _currentLevel = 0;
     private uint _enemiesToSpawnCount = 0;
     
+    
+    private int _lastNotifiedCountdownSecond = 0;
+
     private Dictionary<uint, LivingEntity> _spawnedEnemies = new();
     public GameManager Manager { get; protected set; }
 
 
     [Export]
     private Godot.Collections.Array<Marker3D> botPathPoints;
-    
-    
+
+
     // EVENT HANDLERS //
     public delegate void WaveStateChangedHandler(WaveManager waveManager);
-    
-    
+
+
     // EVENTS //
     public event WaveStateChangedHandler WaveStateChangedEvent;
 }
