@@ -1,6 +1,8 @@
 [gd_resource type="FontVariation" load_steps=2 format=3 uid="uid://dm5nm4q45secc"]
 
-[ext_resource type="FontFile" uid="uid://dvxf68mtns1et" path="res://Assets/Fonts/Raw/FiraSans/FiraSans-Bold.ttf" id="1_2w5rp"]
+[ext_resource type="FontVariation" uid="uid://cjvx5sfopb77m" path="res://Assets/Fonts/FiraSans/firasans_font.tres" id="1_5v4wp"]
 
 [resource]
-base_font = ExtResource("1_2w5rp")
+base_font = ExtResource("1_5v4wp")
+variation_embolden = 1.0
+variation_transform = Transform2D(1, 0.2, 0, 1, 0, 0)

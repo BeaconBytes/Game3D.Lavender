@@ -10,7 +10,7 @@ namespace Lavender.Common.Entity.Variants;
 
 public partial class BoomerEntity : BrainEntity, IWaveEnemy
 {
-    public void WaveSetup(Marker3D[] botPathPoints, WaveManager waveManager)
+    public void SetupWave(Marker3D[] botPathPoints, WaveManager waveManager)
     {
         WaveManager = waveManager;
         _botPathPointsCache = botPathPoints;
