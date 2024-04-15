@@ -1,6 +1,7 @@
 ﻿using System;
 using Godot;
 using Lavender.Client.Managers;
+using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
@@ -30,14 +31,14 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
             IsClient = true;
             SetCollisionLayerValue(1, true);
             SetCollisionMaskValue(1, true);
-            //PlatformFloorLayers = 1;
+            PlatformFloorLayers = 1;
         }
         else
         {
             IsClient = false;
             SetCollisionLayerValue(8, true);
             SetCollisionMaskValue(8, true);
-            //PlatformFloorLayers = 128;
+            PlatformFloorLayers = 128;
         }
 
         MapManager = Manager.MapManager;
@@ -95,25 +96,9 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
     }
 
 
-    public override void _PhysicsProcess(double delta)
-    {
-        base._PhysicsProcess(delta);
-        
-        if (!IsSetup) 
-            return;
-        
-        _deltaTimer += delta;
-
-        while (_deltaTimer >= NET_TICK_TIME)
-        {
-            _deltaTimer -= NET_TICK_TIME;
-            HandleTick();
-            CurrentTick++;
-        }
-    }
     protected virtual void HandleTick()
     {
-        if (NetId == (uint)StaticNetId.Null && CurrentTick % (EnvManager.SERVER_TICK_RATE * 10f) == 0)
+        if (NetId == (uint)StaticNetId.Null && CurrentTick % (GameManager.SERVER_TICK_RATE * 10f) == 0)
             GD.PrintErr("NetId of Entity is NULL!");
     }
 
@@ -171,6 +156,11 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         DestroyedEvent?.Invoke(this);
     }
 
+    protected void TriggerValueChangedEvent(EntityValueChangedType type)
+    {
+        OnValueChangedEvent?.Invoke(this, type);
+    }
+
     public Vector3 WorldPosition => GlobalPosition;
 
     public Vector3 WorldRotation => GlobalRotation;
@@ -181,9 +171,6 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
 
     private double _deltaTimer = 0;
     protected uint CurrentTick { get; set; } = 0;
-    protected const float NET_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
-
-    protected const uint BUFFER_SIZE = 512;
     public GameManager Manager { get; private set; } = null;
     public MapManager MapManager { get; private set; } = null;
     public string DisplayName { get; private set; }
@@ -197,19 +184,21 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
     public bool Destroyed { get; private set; } = false;
 
     public bool Enabled { get; set; } = true;
-
-    // EVENT HANDLERS //
-    public delegate void EntityDestroyEventHandler(IGameEntity sourceEntity);
-
-    public delegate void EntityTeleportedEventHandler(IGameEntity sourceEntity);
-    
     /// <summary>
     /// A array of things we should hide if this entity is set to being controlled by this client(Models, Particles, etc.)
     /// </summary>
     [Export]
     protected Godot.Collections.Array<Node> ServerHiddenNodes;
+
+    // EVENT HANDLERS //
+    public delegate void EntityDestroyEventHandler(IGameEntity sourceEntity);
+
+    public delegate void EntityTeleportedEventHandler(IGameEntity sourceEntity);
+    public delegate void EntityValueChangedHandler(BasicEntity entity, EntityValueChangedType type);
+    
     
     // EVENTS //
     public event EntityDestroyEventHandler DestroyedEvent;
     public event EntityTeleportedEventHandler TeleportedEvent;
+    public event EntityValueChangedHandler OnValueChangedEvent;
 }

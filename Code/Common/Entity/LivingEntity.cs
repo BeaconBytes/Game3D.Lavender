@@ -5,17 +5,18 @@ using Lavender.Common.Entity.Data;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
+using Lavender.Common.Networking.Packets.Variants.Entity.Data;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Registers;
 
 namespace Lavender.Common.Entity;
 
-public partial class LivingEntity : BasicEntity, IControllableEntity
+public partial class LivingEntity : BasicEntity
 {
-
-    public override void _EnterTree()
+    public override void Setup(uint netId, GameManager manager)
     {
-        base._EnterTree();
+        base.Setup(netId, manager);
+        
         Stats = new EntityStats();
         
         Register.Packets.Subscribe<EntityStatePayloadPacket>(OnStatePayloadPacket);
@@ -23,15 +24,23 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         {
             Register.Packets.Subscribe<EntityTeleportPacket>(OnEntityTeleportPacket);
             Register.Packets.Subscribe<EntityRotatePacket>(OnEntityRotatePacket);
+            Register.Packets.Subscribe<EntityValueChangedPacket>(OnValueChangedPacket);
         }
         else
         {
             Register.Packets.Subscribe<EntityInputPayloadPacket>(OnInputPayloadPacket);
+            OnValueChangedEvent += OnValueChanged;
         }
     }
 
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+        
+        OnValueChangedEvent -= OnValueChanged;
+    }
 
-    protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None, float deltaTime = NET_TICK_TIME)
+    protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None, float deltaTime = GameManager.NET_TICK_TIME)
     {
         Vector3 vel = Velocity;
 
@@ -69,10 +78,14 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     protected virtual StatePayload ProcessMovement(InputPayload input)
     {
         Vector3 newVel = ProcessMovementVelocity(input.moveInput, input.flagsInput);
-
+        if (input.flagsInput.HasFlag(EntityMoveFlags.Frozen))
+        {
+            newVel = Vector3.Zero;
+        }
+        
         Vector3 lookInput = input.lookInput;
-        lookInput *= NET_TICK_TIME;
-
+        lookInput *= GameManager.NET_TICK_TIME;
+        
         Tuple<Vector3, Vector3> movementResult = ApplyMovementChanges(newVel, lookInput);
         
         return new StatePayload()
@@ -88,7 +101,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     protected Tuple<Vector3, Vector3> ApplyMovementChanges(Vector3 newVelocity, Vector3 inputRotate)
     {
         Velocity = newVelocity;
-        MoveAndSlide(NET_TICK_TIME);
+        MoveAndSlide(GameManager.NET_TICK_TIME);
         
         Vector3 newRot = ApplyMovementRotation(inputRotate);
 
@@ -98,7 +111,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
     {
         LastProcessedState = LatestServerState;
 
-        uint serverStateBufferIndex = LatestServerState.tick % BUFFER_SIZE;
+        uint serverStateBufferIndex = LatestServerState.tick % GameManager.NET_BUFFER_SIZE;
         float posError = LatestServerState.position.DistanceTo(StateBuffer[serverStateBufferIndex].position);
 
         if (posError > 0.005f)
@@ -115,7 +128,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
 
             while (tickToProcess < CurrentTick)
             {
-                uint bufferIndex = tickToProcess % BUFFER_SIZE;
+                uint bufferIndex = tickToProcess % GameManager.NET_BUFFER_SIZE;
 				
                 // Process the new movement with reconciled state
                 StatePayload statePayload = ProcessMovement(InputBuffer[bufferIndex]);
@@ -153,7 +166,7 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         return (Stats.MovementSpeedBase * Stats.MovementSpeedMultiplier);
     }
     
-    // PACKET EVENT HANDLERS //
+    // EVENT HANDLERS //
     private void OnEntityTeleportPacket(EntityTeleportPacket packet, uint sourceNetId)
     {
         if (packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
@@ -177,28 +190,74 @@ public partial class LivingEntity : BasicEntity, IControllableEntity
         if(packet.NetId == NetId && sourceNetId == (uint)StaticNetId.Server)
             LatestServerState = packet.StatePayload;
     }
+    private void OnValueChangedPacket(EntityValueChangedPacket packet, uint sourceNetId)
+    {
+        if (packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
+            return;
+
+        if (packet.ValueType is EntityValueChangedType.ControlsFrozen)
+        {
+            IsControlsFrozen = Mathf.IsEqualApprox(packet.NewValue, 1.0f);
+        }
+    }
+    
+    private void OnValueChanged(BasicEntity entity, EntityValueChangedType type)
+    {
+        if (entity == this && !IsClient && entity is LivingEntity livingEntity)
+        {
+            float singleValue;
+            if (type is EntityValueChangedType.ControlsFrozen)
+            {
+                singleValue = (livingEntity.IsControlsFrozen ? 1.0f : -1.0f);
+            }
+            else
+                return;
+            
+            
+            Manager.BroadcastPacketToClients(new EntityValueChangedPacket()
+            {
+                NetId = entity.NetId,
+                ValueType = type,
+                NewValue = singleValue,
+            });
+        }
+    }
     
     
 
     protected EntityStats Stats;
 
-    public virtual void SetControllerParent(uint netId)
-    {
-        ControllerParentNetId = netId;
-    }
-
-    public uint ControllerParentNetId { get; private set; }
-
 
     protected bool EnableAutoMoveSlide = false;
-    
-    
+
+    public bool IsControlsFrozen
+    {
+        get
+        {
+            return _isControlsFrozenVal;
+        }
+        set
+        {
+            _isControlsFrozenVal = value;
+            TriggerValueChangedEvent( EntityValueChangedType.ControlsFrozen);
+        }
+    }
+    private bool _isControlsFrozenVal = true;
+
+
     // Network Syncing //
     protected readonly Queue<InputPayload> InputQueue = new();
     
     protected StatePayload LatestServerState;
     protected StatePayload LastProcessedState;
     
-    protected readonly StatePayload[] StateBuffer = new StatePayload[BUFFER_SIZE];
-    protected readonly InputPayload[] InputBuffer= new InputPayload[BUFFER_SIZE];
+    protected readonly StatePayload[] StateBuffer = new StatePayload[GameManager.NET_BUFFER_SIZE];
+    protected readonly InputPayload[] InputBuffer= new InputPayload[GameManager.NET_BUFFER_SIZE];
+    
+    
+    
+    // EVENT HANDLERS //
+    
+    
+    // EVENTS //
 }

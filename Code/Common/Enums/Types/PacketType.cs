@@ -30,6 +30,10 @@ public enum PacketType : byte
     EntityTeleport,
     EntityInputPayload,
     EntityStatePayload,
+    EntitySetGrab,
+    
+    // Entity Data
+    EntityValueChanged,
 
     // Structures
     

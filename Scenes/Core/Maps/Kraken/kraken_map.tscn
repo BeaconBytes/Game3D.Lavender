@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://c64gt0y6ivlvh"]
+[gd_scene load_steps=10 format=4 uid="uid://c64gt0y6ivlvh"]
 
 [ext_resource type="Script" path="res://Code/Common/Managers/Variants/Map/KrakenMapManager.cs" id="1_clhib"]
 [ext_resource type="Material" uid="uid://7p0ra7eebd6x" path="res://Assets/Materials/Mapping/KrakenMap/kraken_flooring.material" id="2_djrxo"]
@@ -48,7 +48,7 @@ size = Vector3(15, 5, 1)
 material = ExtResource("2_nlja3")
 
 [node name="SpawnRoom - Wall2" type="CSGBox3D" parent="NavigationRegion3D/SpawnRoom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.1333, 2.93721, 13.0793)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12.1419, 2.98588, 13.0897)
 size = Vector3(10.699, 5, 1)
 material = ExtResource("2_nlja3")
 
@@ -184,7 +184,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.9505, 5.95, -7.94345)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.9505, 5.95, 20.8174)
 
 [node name="Marker3D7" type="Marker3D" parent="BotWalkStagesPoints"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.4732, 5.95, 20.8174)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -14.55, 5.95, 20.8174)
 
 [node name="SpawnPoints" type="Node3D" parent="."]
 

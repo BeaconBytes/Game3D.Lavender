@@ -20,12 +20,9 @@ public partial class PlayerEntity : HumanoidEntity
         
         _pauseMenuRootNode.Visible = false;
         
-        SetControllerParent((uint)StaticNetId.Null);
         if (IsClient)
         {
             Input.MouseMode = Input.MouseModeEnum.Captured;
-            if(Manager.ClientNetId == NetId)
-                SetControllerParent(NetId);
             
             Register.Packets.Subscribe<ForceSyncEntityPacket>(OnForceSyncEntityPacket);
         }
@@ -107,9 +104,14 @@ public partial class PlayerEntity : HumanoidEntity
                     HandleServerReconciliation();
                 }
                 
-                uint bufferIndex = CurrentTick % BUFFER_SIZE;
+                uint bufferIndex = CurrentTick % GameManager.NET_BUFFER_SIZE;
 
                 Vector3 realMoveDirection = _moveInput.Rotated( Vector3.Up, GlobalTransform.Basis.GetEuler( ).Y ).Normalized( );
+
+                if (IsControlsFrozen && !_flagsInput.HasFlag(EntityMoveFlags.Frozen))
+                {
+                    _flagsInput |= EntityMoveFlags.Frozen;
+                }
                 
                 InputPayload inputPayload = new()
                 {
@@ -146,7 +148,7 @@ public partial class PlayerEntity : HumanoidEntity
             while (InputQueue.Count > 0)
             {
                 InputPayload inputPayload = InputQueue.Dequeue();
-                bufferIndex = inputPayload.tick % BUFFER_SIZE;
+                bufferIndex = inputPayload.tick % GameManager.NET_BUFFER_SIZE;
 
                 StatePayload statePayload = ProcessMovement(inputPayload);
                 StateBuffer[bufferIndex] = statePayload;
@@ -225,13 +227,8 @@ public partial class PlayerEntity : HumanoidEntity
         GlobalPosition = packet.CurrentPos;
         RotateHead(packet.CurrentRotation);
     }
-
-
-    private bool _isNewTick = true;
-    private uint _lastNewTick = 0;
     
-    private bool _isCommonPlayerEntity = false;
-    public bool IsClientHostEnvironment { get; private set; } = false;
+    
 
     private bool _isPaused = false;
     private float _mouseSensitivity = 0.045f;

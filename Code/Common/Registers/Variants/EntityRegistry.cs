@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Entity;
 using Lavender.Common.Entity.Variants;
+using Lavender.Common.Entity.Variants.Enemies;
 using Lavender.Common.Enums.Types;
 
 namespace Lavender.Common.Registers.Variants;
@@ -12,9 +13,7 @@ public class EntityRegistry
     public void LoadDefaults()
     {
         Register<PlayerEntity>(EntityType.Player, "res://Scenes/Core/Entities/Player/player_entity.tscn");
-        Register<BoomerEntity>(EntityType.Boomer, "res://Scenes/Core/Entities/boomer_entity.tscn");
-        // Register<DevEntity>(EntityType.Dev, "res://Scenes/Core/Entities/dev_entity.tscn");
-        // Register<LighthouseEntity>(EntityType.Lighthouse, "res://Scenes/Core/Entities/lighthouse_entity.tscn");
+        Register<BuddyEnemy>(EntityType.BuddyEnemy, "res://Scenes/Core/Entities/Enemies/Buddy/buddy_enemy.tscn");
     }
     
     public void Register<TEntity>( EntityType entityType, string resPath ) where TEntity : IGameEntity
@@ -39,7 +38,7 @@ public class EntityRegistry
             return result;
         }
 
-        throw new Exception( $"Invalid EntityType given." );
+        throw new Exception( $"Invalid EntityType.{entityType.ToString()} given." );
     }
     public EntityType GetEntityTypeFromEntity<TEntity>( ) where TEntity : Node3D
     {

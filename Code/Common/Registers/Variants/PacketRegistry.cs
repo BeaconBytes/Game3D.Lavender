@@ -4,6 +4,7 @@ using Godot;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Networking.Packets;
 using Lavender.Common.Networking.Packets.Variants.Entity;
+using Lavender.Common.Networking.Packets.Variants.Entity.Data;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Networking.Packets.Variants.Mapping;
 using Lavender.Common.Networking.Packets.Variants.Other;
@@ -41,6 +42,10 @@ public class PacketRegistry
         Register<EntityTeleportPacket>(PacketType.EntityTeleport);
         Register<EntityInputPayloadPacket>(PacketType.EntityInputPayload);
         Register<EntityStatePayloadPacket>(PacketType.EntityStatePayload);
+        Register<EntitySetGrabPacket>(PacketType.EntitySetGrab);
+        
+        // Entity Data
+        Register<EntityValueChangedPacket>(PacketType.EntityValueChanged);
     }
     
     public void Register<T>(PacketType packetType) where T : GamePacket

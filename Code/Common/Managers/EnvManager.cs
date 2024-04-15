@@ -15,8 +15,6 @@ public partial class EnvManager : Node
     public bool IsServer { get; protected set; } = false;
     
     public bool IsDebugMode { get; protected set; } = false;
-    
-    public const float SERVER_TICK_RATE = 30f;
 
     public override void _Ready()
     {

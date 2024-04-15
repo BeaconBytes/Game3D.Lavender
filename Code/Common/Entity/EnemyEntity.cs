@@ -1,16 +1,19 @@
 using Godot;
-using Lavender.Common.Entity.Data;
-using Lavender.Common.Enums.Entity;
 using Lavender.Common.Interfaces.Management.Waves;
 using Lavender.Common.Managers;
-using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
-using Lavender.Server.Managers;
 
-namespace Lavender.Common.Entity.Variants;
+namespace Lavender.Common.Entity;
 
-public partial class BoomerEntity : BrainEntity, IWaveEnemy
+public partial class EnemyEntity : BrainEntity, IWaveEnemy
 {
-    public void SetupWave(Marker3D[] botPathPoints, WaveManager waveManager)
+    // Called immediately after spawning the entity but before any logic(or children) are processed
+    public override void Setup(uint netId, GameManager manager)
+    {
+        base.Setup(netId, manager);
+        OnCompletedPathEvent += OnCompletedPath;
+    }
+
+    public virtual void SetupWave(Marker3D[] botPathPoints, WaveManager waveManager)
     {
         WaveManager = waveManager;
         _botPathPointsCache = botPathPoints;
@@ -18,6 +21,12 @@ public partial class BoomerEntity : BrainEntity, IWaveEnemy
         Teleport(_botPathPointsCache[0].GlobalPosition);
         _targetedPointIndex = 0;
         TargetNextPoint();
+    }
+
+    public override void _ExitTree()
+    {
+        base._ExitTree();
+        OnCompletedPathEvent -= OnCompletedPath;
     }
 
     private void TargetNextPoint()
@@ -54,6 +63,13 @@ public partial class BoomerEntity : BrainEntity, IWaveEnemy
 
     }
 
+    
+    // EVENT HANDLERS //
+    private void OnCompletedPath(BrainEntity brainEntity)
+    {
+        Enabled = false;
+    }
+    
 
     private int _targetedPointIndex = 1;
     
@@ -61,5 +77,4 @@ public partial class BoomerEntity : BrainEntity, IWaveEnemy
 
     public WaveManager WaveManager { get; protected set; }
     private Marker3D[] _botPathPointsCache;
-
 }

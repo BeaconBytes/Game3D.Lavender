@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
@@ -317,6 +317,10 @@ public partial class GameManager : LoadableNode
 
     protected const string NETWORK_KEY = "LavendarKey787";
 
+    public const float SERVER_TICK_RATE = 30f;
+    public const float NET_TICK_TIME = 1f / SERVER_TICK_RATE;
+    public const int NET_BUFFER_SIZE = 1024;
+    
     public EnvManager EnvManager { get; private set; }
 
     public bool IsClient { get; private set; } = false;

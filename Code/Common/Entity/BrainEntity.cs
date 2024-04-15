@@ -2,6 +2,7 @@ using Godot;
 using Lavender.Common.Entity.Data;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
+using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Registers;
 
@@ -9,19 +10,35 @@ namespace Lavender.Common.Entity;
 
 public partial class BrainEntity : LivingEntity
 {
-    public override void _Ready()
+    public override void Setup(uint netId, GameManager manager)
     {
-        base._Ready();
-
-        TeleportedEvent += OnTeleported;
-        NavAgent.VelocityComputed += OnVelocityComputed;
+        base.Setup(netId, manager);
         
         NavAgent.MaxSpeed = GetMoveSpeed();
-        
-        Register.Packets.Subscribe<EntityMoveToPacket>(OnEntityMoveToPacket);
 
         if (IsClient)
             NavAgent.AvoidanceEnabled = false;
+
+        NavAgent.SetAvoidanceLayerValue(1, false);
+        NavAgent.SetAvoidanceLayerValue(8, false);
+        NavAgent.SetAvoidanceMaskValue(1, false);
+        NavAgent.SetAvoidanceMaskValue(8, false);
+        if (IsClient)
+        {
+            NavAgent.SetAvoidanceLayerValue(1, true);
+            NavAgent.SetAvoidanceMaskValue(1, true);
+        }
+        else
+        {
+            NavAgent.SetAvoidanceLayerValue(8, true);
+            NavAgent.SetAvoidanceMaskValue(8, true);
+        }
+        
+        TeleportedEvent += OnTeleported;
+        NavAgent.VelocityComputed += OnVelocityComputed;
+        Stats.StatChangedEvent += OnStatChanged;
+        
+        Register.Packets.Subscribe<EntityMoveToPacket>(OnEntityMoveToPacket);
     }
 
 
@@ -64,7 +81,7 @@ public partial class BrainEntity : LivingEntity
         
         if (IsClient)
         {
-            GlobalPosition = GlobalPosition.Lerp(_targetedMovePos, (float)delta * 7f);
+            GlobalPosition = GlobalPosition.Lerp(_targetedMovePos, (float)delta * GetMoveSpeed());
         }
     }
 
@@ -129,6 +146,14 @@ public partial class BrainEntity : LivingEntity
     {
         Velocity = Vector3.Zero;
         NavAgent.SetVelocityForced(Vector3.Zero);
+        _targetedMovePos = GlobalPosition;
+    }
+    private void OnStatChanged(StatType statType, float newValue)
+    {
+        if (statType is StatType.MoveSpeedBase or StatType.MoveSpeedMultiplier)
+        {
+            NavAgent.MaxSpeed = GetMoveSpeed();
+        }
     }
 
     [Export]

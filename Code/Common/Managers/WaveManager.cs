@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Entity;
 using Lavender.Common.Entity.Variants;
+using Lavender.Common.Entity.Variants.Enemies;
 using Lavender.Common.Enums.States;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Interfaces.Management.Waves;
@@ -14,7 +15,6 @@ namespace Lavender.Common.Managers;
 public partial class WaveManager : LoadableNode
 {
     private const float WAVE_STARTUP_TIME = 8f;
-    private const float MIN_TICK_TIME = 1f / EnvManager.SERVER_TICK_RATE;
 
     public void Setup(GameManager gameManager)
     {
@@ -41,16 +41,16 @@ public partial class WaveManager : LoadableNode
 
     private void OnSpawnedEntity(IGameEntity gameEntity)
     {
-        if (gameEntity is BoomerEntity boomerEntity)
+        if (gameEntity is EnemyEntity enemyEntity)
         {
-            boomerEntity.OnCompletedPathEvent += OnCompletedBotPath;
+            enemyEntity.OnCompletedPathEvent += OnCompletedBotPath;
         }
     }
     private void OnDestroyedEntity(IGameEntity gameEntity)
     {
-        if (gameEntity is BoomerEntity boomerEntity)
+        if (gameEntity is EnemyEntity enemyEntity)
         {
-            boomerEntity.OnCompletedPathEvent -= OnCompletedBotPath;
+            enemyEntity.OnCompletedPathEvent -= OnCompletedBotPath;
         }
     }
     private void OnCompletedBotPath(BrainEntity brainEntity)
@@ -69,7 +69,7 @@ public partial class WaveManager : LoadableNode
         {
             if (_waveStartupCooldown > 0)
             {
-                _waveStartupCooldown -= MIN_TICK_TIME;
+                _waveStartupCooldown -= GameManager.NET_TICK_TIME;
                 if (_waveStartupCooldown <= 0)
                 {
                     // STARTUP COUNTDOWN FINISHED!
@@ -96,13 +96,13 @@ public partial class WaveManager : LoadableNode
             // Wave currently running/active
 
             // If there are enemies left to spawn, AND its been at least 4 seconds(equivalently, in ticks) then:
-            if (_enemiesToSpawnCount > 0 && _currentTick % (EnvManager.SERVER_TICK_RATE * 4f) == 0)
+            if (_enemiesToSpawnCount > 0 && (_currentTick % (GameManager.SERVER_TICK_RATE * 4f) == 0 || _spawnedEnemies.Count < 1))
             {
-                BoomerEntity boomerEntity = Manager.SpawnEntity<BoomerEntity>(EntityType.Boomer);
-                _spawnedEnemies.Add(boomerEntity.NetId, boomerEntity);
+                BuddyEnemy enemy = Manager.SpawnEntity<BuddyEnemy>(EntityType.BuddyEnemy);
+                _spawnedEnemies.Add(enemy.NetId, enemy);
 
                 // TODO: Better way to convert botPathPoints into a System Array
-                boomerEntity.SetupWave(new List<Marker3D>(botPathPoints).ToArray(), this);
+                enemy.SetupWave(new List<Marker3D>(botPathPoints).ToArray(), this);
 
                 _enemiesToSpawnCount--;
             }
@@ -175,9 +175,9 @@ public partial class WaveManager : LoadableNode
 
         _deltaTimer += (float)delta;
 
-        while (_deltaTimer >= MIN_TICK_TIME)
+        while (_deltaTimer >= GameManager.NET_TICK_TIME)
         {
-            _deltaTimer -= MIN_TICK_TIME;
+            _deltaTimer -= GameManager.NET_TICK_TIME;
             HandleTick();
             _currentTick++;
         }
@@ -206,7 +206,7 @@ public partial class WaveManager : LoadableNode
 
     // EVENT HANDLERS //
     public delegate void WaveStateChangedHandler(WaveManager waveManager);
-
+    
 
     // EVENTS //
     public event WaveStateChangedHandler WaveStateChangedEvent;
