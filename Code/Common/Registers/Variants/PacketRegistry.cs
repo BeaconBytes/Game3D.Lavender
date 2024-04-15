@@ -24,6 +24,7 @@ public class PacketRegistry
         // Protocol
         Register<AuthMePacket>(PacketType.AuthMe);
         Register<IdentifyPacket>(PacketType.Identify);
+        Register<AcknowledgePacket>(PacketType.Acknowledge);
         
         // Setup
         Register<WorldSetupPacket>(PacketType.WorldSetup);
@@ -126,7 +127,7 @@ public class PacketRegistry
             }
             catch (Exception ex)
             {
-                GD.PrintErr($"InvokeSubscriberEvent() Error!{Environment.NewLine}{ex}");
+                GD.PrintErr($"PacketRegistry#InvokeSubscriberEvent() Error!{Environment.NewLine}{ex}");
                 _callbacks.Remove(subscribeDelegate);
             }
         }

@@ -12,7 +12,7 @@ public partial class MapManager : LoadableNode
 		
 	}
 
-	public Vector3 GetRandomPlayerSpawnPoint()
+	public Marker3D GetRandomPlayerSpawnPoint()
 	{
 		if (_playerSpawnPoints.Count == 0)
 		{
@@ -20,11 +20,11 @@ public partial class MapManager : LoadableNode
 			// return new Vector3(0f, 1f, 0f);
 		}
 		int val = Math.Abs((int)GD.Randi()) % _playerSpawnPoints.Count;
-		return _playerSpawnPoints[val].GlobalPosition;
+		return _playerSpawnPoints[val];
 	}
 
 	[Export]
-	private Godot.Collections.Array<Node3D> _playerSpawnPoints;
+	private Godot.Collections.Array<Marker3D> _playerSpawnPoints;
 
 	public VoxelWorld VoxelWorld { get; protected set; }
 }

@@ -166,7 +166,7 @@ public partial class ServerManager : GameManager
 	/// <summary>
 	/// Initializes a given player to sync them with the current world state on their initial join
 	/// </summary>
-	protected void SetupPlayer(PlayerEntity newEPlayer)
+	protected void SetupPlayer(PlayerEntity newPlayer)
 	{
 		// Tell the just-joined-player AKA newPlayer about all other existing entities
 		// and their position, rotation, etc.
@@ -175,14 +175,17 @@ public partial class ServerManager : GameManager
 			SendPacketToClient(new WorldSetupPacket()
 			{
 				worldName = MapName,
-			}, newEPlayer.NetId);
+			}, newPlayer.NetId);
 		}
-		newEPlayer.Teleport(MapManager.GetRandomPlayerSpawnPoint());
+
+		Marker3D spawnPointSelected = MapManager.GetRandomPlayerSpawnPoint();
+		newPlayer.Teleport(spawnPointSelected.GlobalPosition);
+		newPlayer.SnapRotationTo(spawnPointSelected.GlobalRotation);
 
 		foreach (KeyValuePair<uint, IGameEntity> pair in SpawnedEntities)
 		{
 			uint pairNetId = pair.Key;
-			if (newEPlayer.NetId == pairNetId)
+			if (newPlayer.NetId == pairNetId)
 				continue;
 			
 			Node3D pairNode = (Node3D)pair.Value;
@@ -197,19 +200,19 @@ public partial class ServerManager : GameManager
 			{
 				NetId = pairNetId,
 				EntityType = Register.Entities.GetEntityType(pair.Value),
-			}, newEPlayer.NetId);
+			}, newPlayer.NetId);
 
 			
 			SendPacketToClient(new EntityTeleportPacket()
 			{
 				NetId = pairNetId,
 				Position = pairNode.GlobalPosition,
-			}, newEPlayer.NetId);
+			}, newPlayer.NetId);
 			SendPacketToClient(new EntityRotatePacket()
 			{
 				NetId = pairNetId,
 				Rotation = sendingRotation,
-			}, newEPlayer.NetId);
+			}, newPlayer.NetId);
 		}
 
 		// DevEntity devEnt = SpawnEntity<DevEntity>(EntityType.Dev);

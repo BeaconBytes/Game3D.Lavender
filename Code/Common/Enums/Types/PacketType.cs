@@ -11,6 +11,7 @@ public enum PacketType : byte
     Handshake,
     Identify,
     AuthMe,
+    Acknowledge,
     Heartbeat,
     SetupClient,
     Disconnect,

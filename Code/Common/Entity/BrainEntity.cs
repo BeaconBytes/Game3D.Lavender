@@ -105,8 +105,15 @@ public partial class BrainEntity : LivingEntity
                 Vector3 curPos = GlobalPosition;
                 Vector3 nextPos = NavAgent.GetNextPathPosition();
 
+                EntityMoveFlags moveFlags = EntityMoveFlags.None;
+                
+                if (IsControlsFrozen)
+                {
+                    moveFlags |= EntityMoveFlags.Frozen;
+                }
+                
                 Vector3 newDirectionVector = curPos.DirectionTo(nextPos);
-                Vector3 newVel = ProcessMovementVelocity(newDirectionVector, deltaTime: (float)delta);
+                Vector3 newVel = ProcessMovementVelocity(newDirectionVector, moveFlags: moveFlags, deltaTime: (float)delta);
             
                 if (NavAgent.AvoidanceEnabled)
                     NavAgent.Velocity = newVel;

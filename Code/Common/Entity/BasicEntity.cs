@@ -94,7 +94,23 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
 
         }
     }
+    
+    public override void _Process(double delta)
+    {
+        base._Process(delta);
+        
+        if (!IsSetup) 
+            return;
+        
+        _deltaTimer += delta;
 
+        while (_deltaTimer >= GameManager.NET_TICK_TIME)
+        {
+            _deltaTimer -= GameManager.NET_TICK_TIME;
+            HandleTick();
+            CurrentTick++;
+        }
+    }
 
     protected virtual void HandleTick()
     {

@@ -6,6 +6,7 @@ using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Networking.Packets.Variants.Other;
+using Lavender.Common.Networking.Packets.Variants.Protocol;
 using Lavender.Common.Registers;
 
 namespace Lavender.Common.Entity.Variants;
@@ -25,9 +26,12 @@ public partial class PlayerEntity : HumanoidEntity
             Input.MouseMode = Input.MouseModeEnum.Captured;
             
             Register.Packets.Subscribe<ForceSyncEntityPacket>(OnForceSyncEntityPacket);
+            
+            Manager.SendPacketToServer(new AcknowledgePacket());
         }
         else
         {
+            Register.Packets.Subscribe<AcknowledgePacket>(OnAcknowledgePacket);
             Manager.SendPacketToClient(new ForceSyncEntityPacket()
             {
                 CurrentTick = CurrentTick,
@@ -218,6 +222,16 @@ public partial class PlayerEntity : HumanoidEntity
     }
     
     
+    // EVENT HANDLERS //
+    private void OnAcknowledgePacket(AcknowledgePacket packet, uint sourceNetId)
+    {
+        if (sourceNetId != NetId || IsServerPlayerInitialized)
+            return;
+
+        IsServerPlayerInitialized = true;
+        
+        IsControlsFrozen = false;
+    }
     private void OnForceSyncEntityPacket(ForceSyncEntityPacket packet, uint sourceNetId)
     {
         if (packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
@@ -232,6 +246,7 @@ public partial class PlayerEntity : HumanoidEntity
 
     private bool _isPaused = false;
     private float _mouseSensitivity = 0.045f;
+    public bool IsServerPlayerInitialized { get; protected set; } = false;
 
     private Vector3 _targetedLerpPosition = Vector3.Zero;
     

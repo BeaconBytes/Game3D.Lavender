@@ -36,8 +36,11 @@ public partial class LivingEntity : BasicEntity
     public override void _ExitTree()
     {
         base._ExitTree();
-        
-        OnValueChangedEvent -= OnValueChanged;
+
+        if (!IsClient)
+        {
+            OnValueChangedEvent -= OnValueChanged;
+        }
     }
 
     protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None, float deltaTime = GameManager.NET_TICK_TIME)
@@ -73,7 +76,7 @@ public partial class LivingEntity : BasicEntity
     }
     
     /// <summary>
-    /// Process InputPayload and then ApplyMovementChanges(). input's with moveInput.Y==0 will have gravity applied.
+    /// Process InputPayload and then ApplyMovementChanges().
     /// </summary>
     protected virtual StatePayload ProcessMovement(InputPayload input)
     {
@@ -203,7 +206,7 @@ public partial class LivingEntity : BasicEntity
     
     private void OnValueChanged(BasicEntity entity, EntityValueChangedType type)
     {
-        if (entity == this && !IsClient && entity is LivingEntity livingEntity)
+        if (entity.NetId == NetId && !IsClient && entity is LivingEntity livingEntity)
         {
             float singleValue;
             if (type is EntityValueChangedType.ControlsFrozen)
@@ -220,6 +223,7 @@ public partial class LivingEntity : BasicEntity
                 ValueType = type,
                 NewValue = singleValue,
             });
+            GD.PrintErr($"OnValueChanged sent packet!");
         }
     }
     
