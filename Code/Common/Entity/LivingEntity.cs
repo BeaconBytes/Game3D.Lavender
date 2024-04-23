@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using Lavender.Client.Managers;
 using Lavender.Common.Entity.Data;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
+using Lavender.Common.Networking.Packets.Variants.Entity;
 using Lavender.Common.Networking.Packets.Variants.Entity.Data;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Registers;
@@ -25,6 +27,7 @@ public partial class LivingEntity : BasicEntity
             Register.Packets.Subscribe<EntityTeleportPacket>(OnEntityTeleportPacket);
             Register.Packets.Subscribe<EntityRotatePacket>(OnEntityRotatePacket);
             Register.Packets.Subscribe<EntityValueChangedPacket>(OnValueChangedPacket);
+            Register.Packets.Subscribe<EntitySetGrabPacket>(OnSetGrabbedPacket);
         }
         else
         {
@@ -168,6 +171,21 @@ public partial class LivingEntity : BasicEntity
     {
         return (Stats.MovementSpeedBase * Stats.MovementSpeedMultiplier);
     }
+
+    public void TriggerGrabbedBy(LivingEntity sourceEntity)
+    {
+        if (sourceEntity == null)
+        {
+            GrabbedById = (uint)StaticNetId.Null;
+            ChangeCollisionEnabled(true);
+            IsControlsFrozen = false;
+            return;
+        }
+        
+        ChangeCollisionEnabled(false);
+        IsControlsFrozen = true;
+        GrabbedById = sourceEntity.NetId;
+    }
     
     // EVENT HANDLERS //
     private void OnEntityTeleportPacket(EntityTeleportPacket packet, uint sourceNetId)
@@ -203,6 +221,17 @@ public partial class LivingEntity : BasicEntity
             IsControlsFrozen = Mathf.IsEqualApprox(packet.NewValue, 1.0f);
         }
     }
+    protected virtual void OnSetGrabbedPacket(EntitySetGrabPacket packet, uint sourceNetId)
+    {
+        if (packet.TargetNetId != NetId || sourceNetId != (uint)StaticNetId.Server)
+            return;
+
+        if (Manager.GetEntityFromNetId(packet.SourceNetId) is not LivingEntity sourceLivingEntity)
+            return;
+
+        GrabbedById = packet.SourceNetId;
+        Manager.BroadcastNotification($"{(packet.IsRelease ? "Released" : "Grabbed")} by id {packet.SourceNetId}", 2f);
+    }
     
     private void OnValueChanged(BasicEntity entity, EntityValueChangedType type)
     {
@@ -223,7 +252,6 @@ public partial class LivingEntity : BasicEntity
                 ValueType = type,
                 NewValue = singleValue,
             });
-            GD.PrintErr($"OnValueChanged sent packet!");
         }
     }
     
@@ -233,6 +261,8 @@ public partial class LivingEntity : BasicEntity
 
 
     protected bool EnableAutoMoveSlide = false;
+
+    public uint GrabbedById { get; protected set; }
 
     public bool IsControlsFrozen
     {
@@ -263,5 +293,10 @@ public partial class LivingEntity : BasicEntity
     // EVENT HANDLERS //
     
     
+    // EVENT SIGNATURES //
+    public delegate void EntitySourceTargetEventHandler(IGameEntity source, IGameEntity target);
+
     // EVENTS //
+    public event EntitySourceTargetEventHandler OnEntityGrabbedByEvent;
+    public event EntitySourceTargetEventHandler OnEntityReleasedByEvent;
 }

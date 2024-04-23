@@ -19,28 +19,10 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
     {
         NetId = netId;
         Manager = manager;
-
-        SetCollisionLayerValue(1, false);
-        SetCollisionLayerValue(8, false);
-
-        SetCollisionMaskValue(1, false);
-        SetCollisionMaskValue(8, false);
+        IsClient = Manager is ClientManager;
         
-        if (Manager is ClientManager)
-        {
-            IsClient = true;
-            SetCollisionLayerValue(1, true);
-            SetCollisionMaskValue(1, true);
-            PlatformFloorLayers = 1;
-        }
-        else
-        {
-            IsClient = false;
-            SetCollisionLayerValue(8, true);
-            SetCollisionMaskValue(8, true);
-            PlatformFloorLayers = 128;
-        }
-
+        ChangeCollisionEnabled(true);
+        
         MapManager = Manager.MapManager;
 
         if (ServerHiddenNodes == null)
@@ -92,6 +74,35 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
                 }
             }
 
+        }
+    }
+
+    public virtual void ChangeCollisionEnabled(bool isEnabled)
+    {
+        SetCollisionLayerValue(1, false);
+        SetCollisionLayerValue(8, false);
+
+        SetCollisionMaskValue(1, false);
+        SetCollisionMaskValue(8, false);
+
+        
+        if (IsClient)
+        {
+            PlatformFloorLayers = 1;
+            if (!isEnabled)
+                return;
+            
+            SetCollisionLayerValue(1, true);
+            SetCollisionMaskValue(1, true);
+        }
+        else
+        {
+            PlatformFloorLayers = 128;
+            if (!isEnabled)
+                return;
+            
+            SetCollisionLayerValue(8, true);
+            SetCollisionMaskValue(8, true);
         }
     }
     

@@ -273,7 +273,7 @@ public partial class GameManager : LoadableNode
     }
     public IGameEntity GetEntityFromNetId(uint netId)
     {
-        return SpawnedEntities[netId];
+        return SpawnedEntities.GetValueOrDefault(netId);
     }
 
     
@@ -302,6 +302,8 @@ public partial class GameManager : LoadableNode
         // If server-side; return using PlayerPeers(the raw network connections count). Client-side returns entities of type PlayerEntity in world.
         return IsServer ? PlayerPeers.Count : PlayerEntities.Count;
     }
+
+    public virtual void BroadcastNotification(string message, float showTime = 4f) { }
     
     
     // EVENT LISTENERS //
@@ -355,7 +357,7 @@ public partial class GameManager : LoadableNode
     private bool _isFirstTick = true;
 
 
-    // EVENT HANDLERS //
+    // EVENT SIGNATURES //
     public delegate void SimpleEntityEventHandler(IGameEntity gameEntity);
     
     

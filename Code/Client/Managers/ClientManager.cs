@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Sockets;
 using Godot;
 using Lavender.Common.Entity;
+using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Managers;
@@ -52,8 +53,11 @@ public partial class ClientManager : GameManager
 		_netManager.Stop();
 		base.Unload();
 	}
-	
-	
+
+	public override void BroadcastNotification(string message, float showTime = 4)
+	{
+		((PlayerEntity)ClientEntity).ClientHud.QueueNotification(message, showTime);
+	}
 
 
 	private void OnNetReceived(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)

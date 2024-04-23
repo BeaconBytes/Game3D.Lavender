@@ -44,13 +44,13 @@ public partial class PlayerEntity : HumanoidEntity
     public override void Setup(uint netId, GameManager manager)
     {
         base.Setup(netId, manager);
-        if (_clientHudRootNode == null)
+        if (ClientHud == null)
         {
-            GD.PrintErr($"[PlayerEntity#Setup]: _clientHudRootNode is not set in the editor!");
+            GD.PrintErr($"[PlayerEntity#Setup]: ClientHud node is not set in the editor!");
             return;
         }
 
-        _clientHudRootNode.Setup(this);
+        ClientHud.Setup(this);
     }
 
     public override void _Process(double delta)
@@ -254,7 +254,7 @@ public partial class PlayerEntity : HumanoidEntity
     private Control _pauseMenuRootNode;
 
     [Export]
-    private ClientHud _clientHudRootNode;
+    public ClientHud ClientHud { get; protected set; }
 
     [Export]
     private Camera3D _camera;

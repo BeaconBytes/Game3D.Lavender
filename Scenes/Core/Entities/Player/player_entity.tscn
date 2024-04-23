@@ -20,14 +20,14 @@ bg_color = Color(0.819608, 0.34902, 0.988235, 0.0705882)
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bbrsp"]
 
-[node name="PlayerEntity" type="CharacterBody3D" node_paths=PackedStringArray("_pauseMenuRootNode", "_clientHudRootNode", "_camera", "HeadNode", "ServerHiddenNodes")]
+[node name="PlayerEntity" type="CharacterBody3D" node_paths=PackedStringArray("_pauseMenuRootNode", "ClientHud", "_camera", "HeadNode", "ServerHiddenNodes")]
 collision_layer = 0
 collision_mask = 0
 platform_floor_layers = 1
 platform_wall_layers = 1
 script = ExtResource("1_r05bv")
 _pauseMenuRootNode = NodePath("PauseMenuRoot")
-_clientHudRootNode = NodePath("HUDRoot")
+ClientHud = NodePath("HUDRoot")
 _camera = NodePath("Head/Camera3D")
 HeadNode = NodePath("Head")
 ServerHiddenNodes = [NodePath("Head/Camera3D"), NodePath("Head/MeshInstance3D"), NodePath("Head/Eyes/MeshInstance3D"), NodePath("Body/MeshInstance3D"), null]
