@@ -1,4 +1,6 @@
-﻿using Godot;
+﻿using System.Collections.Generic;
+using Godot;
+using Lavender.Common.Entity.Buffs;
 
 namespace Lavender.Common.Entity;
 
@@ -10,5 +12,8 @@ public interface IGameEntity : INetObject
     public Vector3 WorldRotation { get; }
     
     public string DisplayName { get; }
-    public bool Destroyed { get; }
+    public bool Enabled { get; }
+
+    public List<IEntityBuff> AppliedBuffs { get; }
+    public List<IEntityBuff> TickingAppliedBuffs { get; }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Godot;
 using Lavender.Client.Managers;
+using Lavender.Common.Entity.Buffs;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
@@ -211,6 +213,11 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
     public bool Destroyed { get; private set; } = false;
 
     public bool Enabled { get; set; } = true;
+
+    public List<IEntityBuff> AppliedBuffs { get; private set; } = new List<IEntityBuff>();
+
+    public List<IEntityBuff> TickingAppliedBuffs { get; private set; } = new List<IEntityBuff>();
+
     /// <summary>
     /// A array of things we should hide if this entity is set to being controlled by this client(Models, Particles, etc.)
     /// </summary>

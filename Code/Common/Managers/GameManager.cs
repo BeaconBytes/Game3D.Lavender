@@ -8,7 +8,6 @@ using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Exceptions;
-using Lavender.Common.Managers.Variants;
 using Lavender.Common.Networking.Packets;
 using Lavender.Common.Registers;
 using Lavender.Server.Managers;
@@ -172,8 +171,10 @@ public partial class GameManager : LoadableNode
 
     public void DestroyEntity(IGameEntity gameEntity)
     {
+        bool foundSpawned = SpawnedEntities.ContainsKey(gameEntity.NetId);
+            
         SpawnedEntities.Remove(gameEntity.NetId);
-
+        
         if (gameEntity is BasicEntity basicEntity)
         {
             basicEntity.DestroyedEvent -= OnDestroyedTriggered;
@@ -181,7 +182,7 @@ public partial class GameManager : LoadableNode
         EntityDestroyedEvent?.Invoke(gameEntity);
 
         // An attempt at preventing multiple destroy calls and potential future infinite looping
-        if (!gameEntity.Destroyed)
+        if (!foundSpawned)
         {
             gameEntity.Destroy();
             Node3D tarNode = (Node3D)gameEntity;
