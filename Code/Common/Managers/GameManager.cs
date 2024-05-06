@@ -3,12 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 using Lavender.Client.Managers;
+using Lavender.Common.Controllers;
 using Lavender.Common.Entity;
 using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Exceptions;
 using Lavender.Common.Networking.Packets;
+using Lavender.Common.Networking.Packets.Variants.Controller;
+using Lavender.Common.Networking.Packets.Variants.Entity;
+using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
+using Lavender.Common.Networking.Packets.Variants.Protocol;
 using Lavender.Common.Registers;
 using Lavender.Server.Managers;
 using LiteNetLib;
@@ -22,11 +27,12 @@ namespace Lavender.Common.Managers;
 /// </summary>
 public partial class GameManager : LoadableNode
 {
-    protected override void Preload()
+    protected virtual void ApplyRegistryDefaults()
     {
-        base.Preload();
+        
     }
-
+    
+    
     protected override void Load()
     {
         base.Load();
@@ -62,12 +68,6 @@ public partial class GameManager : LoadableNode
     {
         base.Unload();
         TickingDisabled = true;
-        
-        foreach (KeyValuePair<uint,Node3D> pair in SpawnedNodes)
-        {
-            RemoveChild(pair.Value);
-            pair.Value.QueueFree();
-        }
     }
 
 
@@ -117,11 +117,138 @@ public partial class GameManager : LoadableNode
         WaveManager = CurrentMapRootNode.GetNode<WaveManager>("WaveManager");
     }
     
-    protected virtual void ApplyRegistryDefaults()
+    /// <summary>
+    /// Initializes a given player to sync them with the current world state on their initial join
+    /// </summary>
+    public void InitPlayerController(PlayerController playerController)
     {
+        if (IsClient)
+            return;
         
+        // Tell the just-joined-player AKA newPlayer about all other existing entities
+        // and their position, rotation, etc.
+        if (!IsDualManager)
+        {
+            SendPacketToClientOrdered(new WorldSetupPacket()
+            {
+                worldName = DefaultMapName,
+            }, playerController.NetId);
+        }
+
+        foreach (KeyValuePair<uint,IController> pair in SpawnedControllers)
+        {
+            uint pairNetid = pair.Key;
+            if (playerController.NetId == pairNetid)
+                continue;
+
+            SendPacketToClientOrdered(new SpawnControllerPacket()
+            {
+                NetId = pairNetid,
+                ControllerType = Register.Controllers.GetControllerType(pair.Value),
+            }, playerController.NetId);
+        }
+		
+        foreach (KeyValuePair<uint, IGameEntity> pairEntity in SpawnedEntities)
+        {
+            uint pairNetId = pairEntity.Key;
+            if (playerController.NetId == pairNetId)
+                continue;
+			
+            Node3D pairNode = (Node3D)pairEntity.Value;
+			
+            Vector3 sendingRotation = pairEntity.Value.WorldRotation;
+            if (pairNode is HumanoidEntity pairHumanoid)
+            {
+                sendingRotation = pairHumanoid.GetRotationWithHead();
+            }
+			
+            SendPacketToClientOrdered(new SpawnEntityPacket()
+            {
+                NetId = pairNetId,
+                EntityType = Register.Entities.GetEntityType(pairEntity.Value),
+            }, playerController.NetId);
+
+			
+            SendPacketToClientOrdered(new EntityTeleportPacket()
+            {
+                NetId = pairNetId,
+                Position = pairNode.GlobalPosition,
+            }, playerController.NetId);
+            SendPacketToClientOrdered(new EntityRotatePacket()
+            {
+                NetId = pairNetId,
+                Rotation = sendingRotation,
+            }, playerController.NetId);
+        }
+
+        foreach (KeyValuePair<uint, IController> pair in SpawnedControllers)
+        {
+            SendPacketToClientOrdered(new SetControllingPacket()
+            {
+                ControllerNetId = pair.Value.NetId,
+                ReceiverNetId = pair.Value.ReceiverEntity?.NetId,
+            }, playerController.NetId);
+        }
+		
     }
     
+    protected IController SpawnController(ControllerType controllerType, bool spawnLinkedEntity = false, uint presetNetId = (uint)StaticNetId.Null)
+    {
+        uint spawnedNetId = presetNetId;
+        if (spawnedNetId == (uint)StaticNetId.Null)
+        {
+            spawnedNetId = GenerateNetId();
+        }
+        
+        while (SpawnedNodes.ContainsKey(spawnedNetId))
+        {
+            spawnedNetId = GenerateNetId();
+        }
+
+        string resPath = Register.Controllers.GetResPath(controllerType);
+
+        if (string.IsNullOrEmpty(resPath))
+            throw new Exception($"Invalid resource path: '{resPath}'");
+
+        Node spawnedNode = Register.Scenes.GetInstance<Node>(resPath);
+
+        if (spawnedNode == null)
+            throw new Exception("Null spawnedNode!");
+
+        if (spawnedNode is not IController spawnedController)
+            throw new Exception($"Spawned ControllerType.{controllerType.ToString()} doesn't inherit IController!{Environment.NewLine}Type name is '{spawnedNode.GetClass().GetBaseName()}'");
+
+        spawnedController.Setup(spawnedNetId, this);
+
+        SpawnedNodes.Add(spawnedNetId, spawnedController);
+        SpawnedControllers.Add(spawnedNetId, spawnedController);
+        if (spawnedController is PlayerController playerController)
+        {
+            SpawnedPlayerControllers.Add(spawnedController.NetId, playerController);
+        }
+
+        AddChild(spawnedNode);
+        spawnedNode.Name = $"Controller#{spawnedNetId}";
+
+        NodeSpawnedEvent?.Invoke(spawnedController);
+
+        spawnedController.DestroyedEvent += OnDestroyedTriggered;
+
+        if (spawnLinkedEntity && !IsClient)
+        {
+            EntityType entityType = Register.Entities.GetEntityType(spawnedController);
+            IGameEntity spawnedEntity = SpawnEntity(entityType);
+            spawnedController.SetControlling(spawnedEntity);
+            spawnedController.RespawnReceiver();
+        }
+
+        if (spawnedController is PlayerController spawnedPlayerController && !IsClient)
+        {
+            
+        }
+
+        return spawnedController;
+    }
     protected IGameEntity SpawnEntity(EntityType entityType, uint presetNetId = (uint)StaticNetId.Null)
     {
         uint spawnedNetId = presetNetId;
@@ -130,7 +257,7 @@ public partial class GameManager : LoadableNode
             spawnedNetId = GenerateNetId();
         }
         
-        while (SpawnedEntities.ContainsKey(spawnedNetId))
+        while (SpawnedNodes.ContainsKey(spawnedNetId))
         {
             spawnedNetId = GenerateNetId();
         }
@@ -151,16 +278,18 @@ public partial class GameManager : LoadableNode
         gameEntity.Setup(spawnedNetId, this);
 
         SpawnedEntities.Add(spawnedNetId, gameEntity);
+        SpawnedNodes.Add(spawnedNetId, gameEntity);
 
         AddChild(spawnedNode);
+        spawnedNode.Name = $"Entity#{spawnedNetId}";
 
-        EntitySpawnedEvent?.Invoke(gameEntity);
+        NodeSpawnedEvent?.Invoke(gameEntity);
 
         if (gameEntity is BasicEntity basicEntity)
         {
             basicEntity.DestroyedEvent += OnDestroyedTriggered;
         }
-
+        
         return gameEntity;
     }
 
@@ -168,49 +297,71 @@ public partial class GameManager : LoadableNode
     {
         return (TEntity)SpawnEntity(entityType, presetNetId);
     }
-
-    public void DestroyEntity(IGameEntity gameEntity)
+    public TController SpawnController<TController>(ControllerType controllerType, bool spawnLinkedEntity = false, uint presetNetId = 0) where TController : IController
     {
-        bool foundSpawned = SpawnedEntities.ContainsKey(gameEntity.NetId);
-            
-        SpawnedEntities.Remove(gameEntity.NetId);
+        return (TController)SpawnController(controllerType, spawnLinkedEntity, presetNetId);
+    }
+
+    public void DestroyNode(INetNode netNode)
+    {
+        bool foundSpawned = SpawnedNodes.ContainsKey(netNode.NetId);
+
+        if (netNode is IController)
+        {
+            if (netNode is PlayerController)
+                SpawnedPlayerControllers.Remove(netNode.NetId);
+            SpawnedControllers.Remove(netNode.NetId);
+        }
+        else if (netNode is IGameEntity)
+            SpawnedEntities.Remove(netNode.NetId);
+        SpawnedNodes.Remove(netNode.NetId);
         
-        if (gameEntity is BasicEntity basicEntity)
+        if (netNode is BasicEntity basicEntity)
         {
             basicEntity.DestroyedEvent -= OnDestroyedTriggered;
         }
-        EntityDestroyedEvent?.Invoke(gameEntity);
+        NodeDestroyedEvent?.Invoke(netNode);
 
         // An attempt at preventing multiple destroy calls and potential future infinite looping
-        if (!foundSpawned)
+        if (foundSpawned)
         {
-            gameEntity.Destroy();
-            Node3D tarNode = (Node3D)gameEntity;
-            RemoveChild(tarNode);
-            tarNode.QueueFree();
+            if(netNode is IGameEntity gameEntity)
+                gameEntity.Destroy();
+
+            if (netNode is Node node)
+            {
+                RemoveChild(node);
+                node.QueueFree();
+            }
         }
-        
     }
     
     public void SendPacketToClient(GamePacket packet, uint netId)
     {
         SendPacketToClient( packet, GetPeerFromNetId( netId ) );
     }
-    public void SendPacketToClient(GamePacket packet, IGameEntity gameEntity)
+
+    public void SendPacketToClientOrdered(GamePacket packet, uint netId)
     {
-        SendPacketToClient( packet, GetPeerFromEntity( gameEntity ) );
+        SendPacketToClient(packet, GetPeerFromNetId(netId));
     }
     public void SendPacketToClient(GamePacket packet, NetPeer peer)
     {
         if (IsClient)
-        {
-            GD.PrintErr("SendPacketToClient was called in client-side!");
-            return;
-        }
+            throw new Exception("GameManger#SendPacketToClient() was called client-side!");
+        
         peer.Send( WritePacketSerial( packet ), DeliveryMethod.ReliableUnordered );
     }
+
+    public void SendPacketToClientOrdered(GamePacket packet, NetPeer peer)
+    {
+        if (IsClient)
+            throw new Exception("GameManger#SendPacketToClientOrdered() was called client-side!");
+        
+        peer.Send(WritePacketSerial(packet), DeliveryMethod.ReliableOrdered);
+    }
     /// <summary>
-    /// Sends given packet to ALL PlayerEntity in _playerEntities using RELIABLE, skipping peerToSkip
+    /// Sends given packet to ALL PlayerEntity in _playerEntities using RELIABLE/UNORDERED, skipping peerToSkip
     /// </summary>
     public void BroadcastPacketToClients(GamePacket packet, NetPeer peerToSkip = null)
     {
@@ -220,13 +371,22 @@ public partial class GameManager : LoadableNode
         }
     }
     
+    /// <summary>
+    /// Sends given packet to ALL PlayerEntity in _playerEntities using RELIABLE/ORDERED, skipping peerToSkip
+    /// </summary>
+    public void BroadcastPacketToClientsOrdered(GamePacket packet, NetPeer peerToSkip = null)
+    {
+        foreach (KeyValuePair<NetPeer,uint> pair in PlayerPeers.Where(pair => pair.Key != peerToSkip))
+        {
+            SendPacketToClientOrdered(packet, pair.Key);
+        }
+    }
+    
     public void SendPacketToServer(GamePacket packet)
     {
         if (!IsClient)
-        {
-            GD.PrintErr("SendPacketToServer was called in server-side!");
-            return;
-        }
+            throw new Exception("GameManager#SendPacketToServer() was called in server-side!");
+        
         ServerPeer?.Send(WritePacketSerial(packet), DeliveryMethod.ReliableUnordered);
     }
 
@@ -250,25 +410,25 @@ public partial class GameManager : LoadableNode
     }
     
     
-    public IGameEntity GetEntityFromPeer(NetPeer peer)
+    protected IGameEntity GetEntityFromPeer(NetPeer peer)
     {
         return GetEntityFromNetId(PlayerPeers[peer]);
     }
-    public NetPeer GetPeerFromEntity(IGameEntity gameEntity)
+    protected NetPeer GetPeerFromEntity(IGameEntity gameEntity)
     {
         if (gameEntity == null)
             return null;
 			
         return PlayerPeers.First(x => x.Value == gameEntity.NetId).Key;
     }
-    public NetPeer GetPeerFromNetId(uint netId)
+    protected NetPeer GetPeerFromNetId(uint netId)
     {
         if ( netId == 0 )
             return null;
 
         return PlayerPeers.First(x => x.Value == netId).Key;
     }
-    public uint GetNetIdFromPeer(NetPeer peer)
+    protected uint GetNetIdFromPeer(NetPeer peer)
     {
         return PlayerPeers[peer];
     }
@@ -277,51 +437,33 @@ public partial class GameManager : LoadableNode
         return SpawnedEntities.GetValueOrDefault(netId);
     }
 
-    
-    /// <summary>
-    /// Gets a array of all entity's of type PlayerEntity currently spawned in the world. WARNING: Inefficient
-    /// </summary>
-    public PlayerEntity[] GetPlayers()
-    {
-        if (PlayerEntities.Count == 0)
-            return null;
-
-        List<PlayerEntity> playersList = new();
-        foreach (KeyValuePair<uint,PlayerEntity> pair in PlayerEntities)
-        {
-            playersList.Add(pair.Value);
-        }
-
-        return playersList.ToArray();
-    }
-
     /// <summary>
     /// Gets the total count of players in this world. WARNING: May be inaccurate on client-side!
     /// </summary>
     public int GetPlayerCount()
     {
         // If server-side; return using PlayerPeers(the raw network connections count). Client-side returns entities of type PlayerEntity in world.
-        return IsServer ? PlayerPeers.Count : PlayerEntities.Count;
+        return IsServer ? PlayerPeers.Count : SpawnedPlayerControllers.Count;
     }
 
     public virtual void BroadcastNotification(string message, float showTime = 4f) { }
     
     
     // EVENT LISTENERS //
-    private void OnDestroyedTriggered(IGameEntity sourceEntity)
+    private void OnDestroyedTriggered(INetNode netNode)
     {
-        if (sourceEntity == null)
+        if (netNode == null)
             return;
 
-        DestroyEntity(sourceEntity);
+        DestroyNode(netNode);
     }
     
     
 
     protected const string NETWORK_KEY = "LavendarKey787";
 
-    public const float SERVER_TICK_RATE = 30f;
-    public const float NET_TICK_TIME = 1f / SERVER_TICK_RATE;
+    public const double SERVER_TICK_RATE = 30d;
+    public const double NET_TICK_TIME = 1d / SERVER_TICK_RATE;
     public const int NET_BUFFER_SIZE = 1024;
     
     public EnvManager EnvManager { get; private set; }
@@ -330,11 +472,12 @@ public partial class GameManager : LoadableNode
     public bool IsServer { get; private set; } = false;
     public bool IsDualManager { get; protected set; } = true;
 
-    protected readonly Dictionary<uint, Node3D> SpawnedNodes = new ();
+    protected readonly Dictionary<uint, INetNode> SpawnedNodes = new();
     protected readonly Dictionary<uint, IGameEntity> SpawnedEntities = new();
+    protected readonly Dictionary<uint, IController> SpawnedControllers = new();
+    protected readonly Dictionary<uint, PlayerController> SpawnedPlayerControllers = new();
     
     protected readonly Dictionary<NetPeer, uint> PlayerPeers = new();
-    protected readonly Dictionary<uint, PlayerEntity> PlayerEntities = new();
 
     private readonly NetDataWriter _netWriterCached = new();
     protected readonly EventBasedNetListener _netListener = new();
@@ -343,7 +486,7 @@ public partial class GameManager : LoadableNode
     // The NetPeer of the Server(for client-side)
     public NetPeer ServerPeer { get; protected set; }
     public uint ClientNetId { get; protected set; } = (uint)StaticNetId.Null;
-    public IGameEntity ClientEntity { get; protected set; }
+    public PlayerController ClientController { get; protected set; }
     
     [Export]
     protected Node MapSocketNode;
@@ -354,15 +497,18 @@ public partial class GameManager : LoadableNode
     public PathManager PathManager { get; protected set; }
 
     public bool TickingDisabled { get; protected set; } = true;
+    
+    public string DefaultMapName { get; protected set; } = "default";
 
     private bool _isFirstTick = true;
 
 
     // EVENT SIGNATURES //
-    public delegate void SimpleEntityEventHandler(IGameEntity gameEntity);
+    public delegate void SimpleNetNodeEventHandler(INetNode target);
+    public delegate void SourcedNetNodeEventHandler(INetNode source, INetNode target);
     
     
     // EVENTS //
-    public event SimpleEntityEventHandler EntitySpawnedEvent;
-    public event SimpleEntityEventHandler EntityDestroyedEvent;
+    public event SimpleNetNodeEventHandler NodeSpawnedEvent;
+    public event SimpleNetNodeEventHandler NodeDestroyedEvent;
 }

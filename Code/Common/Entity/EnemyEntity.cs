@@ -40,9 +40,9 @@ public partial class EnemyEntity : BrainEntity, IWaveEnemy
         SetDesiredPathLocation(_botPathPointsCache[_targetedPointIndex].GlobalPosition);
     }
     
-    protected override void HandleTick()
+    protected override void NetworkProcess(double delta)
     {
-        base.HandleTick();
+        base.NetworkProcess(delta);
 
         if (!Enabled)
             return;

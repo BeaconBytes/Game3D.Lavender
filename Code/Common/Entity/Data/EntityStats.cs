@@ -5,6 +5,8 @@ namespace Lavender.Common.Entity.Data;
 
 public class EntityStats
 {
+    public float FullMoveSpeed => (MovementSpeedBase * MovementSpeedMultiplier);
+
     private void FireStatChanged(StatType statType, float newValue)
     {
         StatChangedEvent?.Invoke(statType, newValue);

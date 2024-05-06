@@ -14,7 +14,7 @@ public partial class BrainEntity : LivingEntity
     {
         base.Setup(netId, manager);
         
-        NavAgent.MaxSpeed = GetMoveSpeed();
+        NavAgent.MaxSpeed = Stats.FullMoveSpeed;
 
         if (IsClient)
             NavAgent.AvoidanceEnabled = false;
@@ -49,11 +49,11 @@ public partial class BrainEntity : LivingEntity
         
         base._ExitTree();
     }
-    
-    
-    protected override void HandleTick()
+
+
+    protected override void NetworkProcess(double delta)
     {
-        base.HandleTick();
+        base.NetworkProcess(delta);
 
         if (!Enabled)
             return;
@@ -81,7 +81,7 @@ public partial class BrainEntity : LivingEntity
         
         if (IsClient)
         {
-            GlobalPosition = GlobalPosition.Lerp(_targetedMovePos, (float)delta * GetMoveSpeed());
+            GlobalPosition = GlobalPosition.Lerp(_targetedMovePos, (float)delta * Stats.FullMoveSpeed);
         }
     }
 
@@ -96,7 +96,7 @@ public partial class BrainEntity : LivingEntity
         {
             if (NavAgent.IsNavigationFinished())
             {
-                Vector3 newVel = ProcessMovementVelocity(Vector3.Zero, deltaTime: (float)delta);
+                Vector3 newVel = ProcessMovementVelocity(Vector3.Zero, delta: (float)delta);
 
                 OnVelocityComputed(newVel);
             }
@@ -113,7 +113,7 @@ public partial class BrainEntity : LivingEntity
                 }
                 
                 Vector3 newDirectionVector = curPos.DirectionTo(nextPos);
-                Vector3 newVel = ProcessMovementVelocity(newDirectionVector, moveFlags: moveFlags, deltaTime: (float)delta);
+                Vector3 newVel = ProcessMovementVelocity(newDirectionVector, moveFlags: moveFlags, delta: (float)delta);
             
                 if (NavAgent.AvoidanceEnabled)
                     NavAgent.Velocity = newVel;
@@ -159,7 +159,7 @@ public partial class BrainEntity : LivingEntity
     {
         if (statType is StatType.MoveSpeedBase or StatType.MoveSpeedMultiplier)
         {
-            NavAgent.MaxSpeed = GetMoveSpeed();
+            NavAgent.MaxSpeed = Stats.FullMoveSpeed;
         }
     }
 
