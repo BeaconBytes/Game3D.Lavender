@@ -11,12 +11,6 @@ public partial class BasicTurret : BasicEntity
         WaveManager = waveManager;
     }
 
-    protected override void HandleTick()
-    {
-        base.HandleTick();
-        
-    }
-
     [Export]
     public Node3D TurretHeadRoot;
 

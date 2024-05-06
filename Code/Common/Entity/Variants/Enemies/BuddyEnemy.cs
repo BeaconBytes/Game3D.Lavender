@@ -41,9 +41,9 @@ public partial class BuddyEnemy : EnemyEntity
         
     }
 
-    protected override void HandleTick()
+    protected override void NetworkProcess(double delta)
     {
-        base.HandleTick();
+        base.NetworkProcess(delta);
 
         if (Dead || !Enabled)
             return;

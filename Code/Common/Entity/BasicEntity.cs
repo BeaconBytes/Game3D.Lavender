@@ -2,7 +2,10 @@
 using System.Collections.Generic;
 using Godot;
 using Lavender.Client.Managers;
+using Lavender.Common.Controllers;
 using Lavender.Common.Entity.Buffs;
+using Lavender.Common.Entity.Data;
+using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
@@ -24,60 +27,55 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         IsClient = Manager is ClientManager;
         
         ChangeCollisionEnabled(true);
+        RecalculateVisibility();
         
         MapManager = Manager.MapManager;
+    }
 
+    public virtual void RecalculateVisibility()
+    {
         if (ServerHiddenNodes == null)
         {
-            GD.PrintErr($"ServerHiddenNodes is null on this entity!");    
+            throw new Exception("PostSetup#ServerHiddenNodes() is null on this entity!");
+        }
+        
+        IGameEntity receiverEntity = Manager.ClientController?.ReceiverEntity;
+
+        if (receiverEntity is null && IsClient)
+        {
+            //throw new Exception("BasicEntity#PostSetup(): ReceiverEntity is null on this entity!");
             return;
         }
+        
         foreach (Node n in ServerHiddenNodes)
         {
-
-            if (n is Camera3D cam)
+            switch (n)
             {
-                if (NetId == Manager.ClientNetId)
+                case Camera3D camera:
                 {
-                    cam.MakeCurrent();
-                }
-                else
-                {
-                    cam.ClearCurrent();
-                }
-            }
-            else if(n is Control con)
-            {
-                if (NetId == manager.ClientNetId)
-                {
-                    con.Visible = true;
-                }
-                else
-                {
-                    con.Visible = false;
-                }
-            }
-            else if (n is Node3D ntd)
-            {
-                if (Manager.IsClient)
-                {
-                    if (NetId == Manager.ClientNetId)
+                    if (receiverEntity == this)
                     {
-                        ntd.Visible = false;
+                        camera.Visible = true;
+                        camera.MakeCurrent();
                     }
                     else
                     {
-                        ntd.Visible = true;
+                        camera.ClearCurrent();
+                        camera.Visible = false;
                     }
-                }
-                else
-                {
-                    ntd.Visible = false;
-                }
-            }
 
+                    continue;
+                }
+                case Node3D n3d when IsClient:
+                    n3d.Visible = receiverEntity != this;
+                    break;
+                case Node3D n3d:
+                    n3d.Visible = false;
+                    break;
+            }
         }
     }
+
 
     public virtual void ChangeCollisionEnabled(bool isEnabled)
     {
@@ -120,32 +118,42 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         while (_deltaTimer >= GameManager.NET_TICK_TIME)
         {
             _deltaTimer -= GameManager.NET_TICK_TIME;
-            HandleTick();
+            NetworkProcess(GameManager.NET_TICK_TIME);
             CurrentTick++;
         }
     }
 
-    protected virtual void HandleTick()
+    public virtual void HandleControllerInputs(RawInputs inputs)
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Teleport(Vector3 position, Vector3? rotation = null)
+    {
+        GlobalPosition = position;
+        if (rotation.HasValue)
+            GlobalRotation = rotation.Value;
+        
+        if (!IsClient)
+        {
+            Manager.BroadcastPacketToClients(new EntityTeleportPacket()
+            {
+                NetId = NetId,
+                Position = GlobalPosition,
+                Rotation = GlobalRotation,
+            });
+        }
+
+        TeleportedEvent?.Invoke(this);
+    }
+
+    protected virtual void NetworkProcess(double delta)
     {
         if (NetId == (uint)StaticNetId.Null && CurrentTick % (GameManager.SERVER_TICK_RATE * 10f) == 0)
             GD.PrintErr("NetId of Entity is NULL!");
     }
 
     public uint NetId { get; private set; } = (uint)StaticNetId.Null;
-    public void Teleport(Vector3 position)
-    {
-        GlobalPosition = position;
-        if (!IsClient)
-        {
-            Manager.BroadcastPacketToClients(new EntityTeleportPacket()
-            {
-                NetId = NetId,
-                Position = position,
-            });
-        }
-
-        TeleportedEvent?.Invoke(this);
-    }
 
     public void SnapRotationTo(Vector3 rotation)
     {
@@ -158,6 +166,26 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
                 Rotation = GlobalRotation,
             });
         }
+    }
+
+    
+    public virtual void AddController(IController controller, bool insertFirst = false)
+    {
+        if (ActiveControllers.Contains(controller))
+            throw new Exception("Tried to add same controller multiple times to a BasicEntity!");
+        
+        if (insertFirst)
+        {
+            ActiveControllers.Insert(0, controller);
+            return;
+        }
+        ActiveControllers.Add(controller);
+    }
+    public virtual void RemoveController(IController controller)
+    {
+        if (!ActiveControllers.Contains(controller))
+            throw new Exception("Tried to remove a non-existent controller on a BasicEntity!");
+        ActiveControllers.Remove(controller);
     }
 
     /// <summary>
@@ -185,14 +213,22 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
         DestroyedEvent?.Invoke(this);
     }
 
-    protected void TriggerValueChangedEvent(EntityValueChangedType type)
+    private void TriggerValueChangedEvent(EntityValueChangedType type)
     {
         OnValueChangedEvent?.Invoke(this, type);
     }
 
-    public Vector3 WorldPosition => GlobalPosition;
-
-    public Vector3 WorldRotation => GlobalRotation;
+    public Vector3 WorldPosition
+    {
+        get => GlobalPosition;
+        set => GlobalPosition = value;
+    }
+    public Vector3 WorldRotation
+    {
+        get => GlobalRotation;
+        set => GlobalRotation = value;
+    }
+    
     public virtual void SetName(string name)
     {
         DisplayName = name;
@@ -214,17 +250,40 @@ public partial class BasicEntity : CharacterBody3D, IGameEntity
 
     public bool Enabled { get; set; } = true;
 
-    public List<IEntityBuff> AppliedBuffs { get; private set; } = new List<IEntityBuff>();
+    public EntityStats Stats { get; protected set; }
 
-    public List<IEntityBuff> TickingAppliedBuffs { get; private set; } = new List<IEntityBuff>();
+    public bool AutomaticMoveAndSlide { get; protected set; }
 
+    public List<IController> ActiveControllers { get; } = new();
+    public List<IEntityBuff> AppliedBuffs { get; } = new();
+
+    public List<IEntityBuff> TickingAppliedBuffs { get; } = new();
+    
+    
+    
+    public bool IsControlsFrozen
+    {
+        get
+        {
+            return _isControlsFrozenVal;
+        }
+        set
+        {
+            _isControlsFrozenVal = value;
+            TriggerValueChangedEvent( EntityValueChangedType.ControlsFrozen);
+        }
+    }
+    private bool _isControlsFrozenVal = true;
+    
+    
+    
     /// <summary>
     /// A array of things we should hide if this entity is set to being controlled by this client(Models, Particles, etc.)
     /// </summary>
     [Export]
     protected Godot.Collections.Array<Node> ServerHiddenNodes;
 
-    // EVENT HANDLERS //
+    // EVENT SIGNATURES //
     public delegate void EntityDestroyEventHandler(IGameEntity sourceEntity);
 
     public delegate void EntityTeleportedEventHandler(IGameEntity sourceEntity);

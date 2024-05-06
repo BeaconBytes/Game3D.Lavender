@@ -46,11 +46,11 @@ public partial class LivingEntity : BasicEntity
         }
     }
 
-    protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None, float deltaTime = GameManager.NET_TICK_TIME)
+    protected virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None, double delta = GameManager.NET_TICK_TIME)
     {
         Vector3 vel = Velocity;
 
-        float gravityVector = vel.Y;
+        double gravityVector = vel.Y;
         
         if (IsOnFloor())
         {
@@ -58,17 +58,17 @@ public partial class LivingEntity : BasicEntity
         }
         else
         {
-            gravityVector -= GravityVal * deltaTime;
+            gravityVector -= GravityVal * delta;
         }
 
-        float speed = GetMoveSpeed();
+        float speed = Stats.FullMoveSpeed;
         
         if (IsOnFloor())
         {
-            vel = vel.MoveToward(moveInput * speed, Stats.MovementAcceleration * deltaTime);
+            vel = vel.MoveToward(moveInput * speed, Stats.MovementAcceleration * (float)delta);
         }
 
-        vel.Y = gravityVector;
+        vel.Y = (float)gravityVector;
         
         if (moveFlags.HasFlag(EntityMoveFlags.Jump) && IsOnFloor())
         {
@@ -90,7 +90,7 @@ public partial class LivingEntity : BasicEntity
         }
         
         Vector3 lookInput = input.lookInput;
-        lookInput *= GameManager.NET_TICK_TIME;
+        lookInput *= (float)GameManager.NET_TICK_TIME;
         
         Tuple<Vector3, Vector3> movementResult = ApplyMovementChanges(newVel, lookInput);
         
@@ -165,13 +165,8 @@ public partial class LivingEntity : BasicEntity
         RotateZ(inputRotate.Z);
         return GlobalRotation;
     }
-
-
-    protected float GetMoveSpeed()
-    {
-        return (Stats.MovementSpeedBase * Stats.MovementSpeedMultiplier);
-    }
-
+    
+    
     public void TriggerGrabbedBy(LivingEntity sourceEntity)
     {
         if (sourceEntity == null)
@@ -246,7 +241,7 @@ public partial class LivingEntity : BasicEntity
                 return;
             
             
-            Manager.BroadcastPacketToClients(new EntityValueChangedPacket()
+            Manager.BroadcastPacketToClientsOrdered(new EntityValueChangedPacket()
             {
                 NetId = entity.NetId,
                 ValueType = type,
@@ -257,27 +252,14 @@ public partial class LivingEntity : BasicEntity
     
     
 
-    protected EntityStats Stats;
-
-
-    protected bool EnableAutoMoveSlide = false;
-
     public uint GrabbedById { get; protected set; }
 
-    public bool IsControlsFrozen
-    {
-        get
-        {
-            return _isControlsFrozenVal;
-        }
-        set
-        {
-            _isControlsFrozenVal = value;
-            TriggerValueChangedEvent( EntityValueChangedType.ControlsFrozen);
-        }
-    }
-    private bool _isControlsFrozenVal = true;
+    
 
+
+    protected EntityStats Stats;
+
+    protected bool EnableAutoMoveSlide = false;
 
     // Network Syncing //
     protected readonly Queue<InputPayload> InputQueue = new();

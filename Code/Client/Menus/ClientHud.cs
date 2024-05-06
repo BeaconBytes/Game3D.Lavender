@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using Lavender.Common.Controllers;
 using Lavender.Common.Entity;
 using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Net;
@@ -12,9 +13,9 @@ namespace Lavender.Client.Menus;
 
 public partial class ClientHud : Control
 {
-    public void Setup(PlayerEntity ownerEntity)
+    public void Setup(PlayerController owner)
     {
-        _ownerPlayerEntity = ownerEntity;
+        _owner = owner;
         if (_notificationLabelNode == null)
         {
             GD.PrintErr($"[ClientHud#Setup()]: _notificationLabelNode is unset in the editor!");
@@ -65,7 +66,7 @@ public partial class ClientHud : Control
         });
     }
 
-    private PlayerEntity _ownerPlayerEntity;
+    private PlayerController _owner;
     private float _msgTimeRemaining = 0f;
 
     private readonly Queue<NotificationMsgData> _notificationMsgQueue = new Queue<NotificationMsgData>();

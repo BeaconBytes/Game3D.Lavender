@@ -3,11 +3,17 @@ using Lavender.Common.Managers;
 
 namespace Lavender.Common.Controllers;
 
-public interface IController
+public interface IController : INetNode
 {
-    public void Setup(uint netId, GameManager gameManager);
-    public void NetworkTick(double delta);
-    public void GameTick(double delta);
-    public uint NetId { get; }
+    public void SetControlling(IGameEntity gameEntity);
+
+    /// <summary>
+    /// Asks this controller to respawn its receiver and handle events and setup as needed.
+    /// </summary>
+    public void RespawnReceiver();
+    
     public IGameEntity ReceiverEntity { get; }
+    public bool Destroyed { get; }
+
+    public event GameManager.SimpleNetNodeEventHandler DestroyedEvent;
 }
