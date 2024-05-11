@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Godot;
 using LiteNetLib.Utils;
 
@@ -7,16 +8,19 @@ public class EntityTeleportPacket : GamePacket
 {
     public uint NetId { get; set; }
     public Vector3 Position { get; set; }
+    public Vector3 Rotation { get; set; }
 
     public override void Serialize(NetDataWriter writer)
     {
         writer.Put(NetId);
         writer.Put(Position);
+        writer.Put(Rotation);
     }
 
     public override void Deserialize(NetDataReader reader)
     {
         NetId = reader.GetUInt();
         Position = reader.GetVector3();
+        Rotation = reader.GetVector3();
     }
 }

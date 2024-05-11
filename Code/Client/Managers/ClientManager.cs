@@ -1,12 +1,14 @@
 using System.Net;
 using System.Net.Sockets;
 using Godot;
+using Lavender.Common.Controllers;
 using Lavender.Common.Entity;
-using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Managers;
+using Lavender.Common.Networking.Packets.Variants.Controller;
 using Lavender.Common.Networking.Packets.Variants.Entity;
+using Lavender.Common.Networking.Packets.Variants.Other;
 using Lavender.Common.Networking.Packets.Variants.Protocol;
 using Lavender.Common.Registers;
 using LiteNetLib;
@@ -34,7 +36,8 @@ public partial class ClientManager : GameManager
 		Register.Packets.Subscribe<IdentifyPacket>(OnIdentifyPacket);
 		
 		Register.Packets.Subscribe<SpawnEntityPacket>(OnSpawnEntityPacket);
-		Register.Packets.Subscribe<DestroyEntityPacket>(OnDestroyEntityPacket);
+		Register.Packets.Subscribe<SpawnControllerPacket>(OnSpawnControllerPacket);
+		Register.Packets.Subscribe<DestroyPacket>(OnDestroyPacket);
 		
 		Register.Packets.Subscribe<WorldSetupPacket>(OnSetupWorldPacket);
 	}
@@ -56,10 +59,11 @@ public partial class ClientManager : GameManager
 
 	public override void BroadcastNotification(string message, float showTime = 4)
 	{
-		((PlayerEntity)ClientEntity).ClientHud.QueueNotification(message, showTime);
+		ClientController.ClientHud.QueueNotification(message, showTime);
 	}
 
 
+	// EVENT HANDLERS //
 	private void OnNetReceived(NetPeer peer, NetPacketReader reader, byte channel, DeliveryMethod deliveryMethod)
 	{
 		PacketType packetType = (PacketType)reader.GetByte();
@@ -84,9 +88,11 @@ public partial class ClientManager : GameManager
 		GetTree().Quit();
 	}
 
-
 	private void OnIdentifyPacket(IdentifyPacket packet, uint sourceNetId)
 	{
+		if (sourceNetId != (uint)StaticNetId.Server)
+			return;
+		
 		ClientNetId = packet.NetId;
 		
 		SendPacketToServer(new AuthMePacket()
@@ -106,16 +112,21 @@ public partial class ClientManager : GameManager
 	{
 		EntityType toSpawnType = packet.EntityType;
 		
-		IGameEntity gameEntity = SpawnEntity(toSpawnType, packet.NetId);
+		SpawnEntity(toSpawnType, packet.NetId);
+	}
+	private void OnSpawnControllerPacket(SpawnControllerPacket packet, uint sourceNetId)
+	{
+		ControllerType toSpawnType = packet.ControllerType;
+		IController controller = SpawnController(toSpawnType, false, packet.NetId);
 		
-		if (packet.NetId == ClientNetId)
+		if (packet.NetId == ClientNetId && controller is PlayerController playerController)
 		{
-			ClientEntity = gameEntity;
+			ClientController = playerController;
 		}
 	}
-	private void OnDestroyEntityPacket(DestroyEntityPacket packet, uint sourceNetId)
+	private void OnDestroyPacket(DestroyPacket packet, uint sourceNetId)
 	{
-		DestroyEntity(GetEntityFromNetId(packet.NetId));
+		DestroyNode(GetEntityFromNetId(packet.NetId));
 	}
 	
 }

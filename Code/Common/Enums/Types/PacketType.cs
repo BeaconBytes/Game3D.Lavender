@@ -15,15 +15,18 @@ public enum PacketType : byte
     Heartbeat,
     SetupClient,
     Disconnect,
+    Destroy,
     
     // World/Map
     WorldSetup,
     MapNotification,
+    
+    // Controller
+    SpawnController,
 
     // Entity Management
     SpawnEntity,
-    DestroyEntity,
-    ForceSyncEntity,
+    SetControlling,
 
     // Entity Updates
     EntityRotate,

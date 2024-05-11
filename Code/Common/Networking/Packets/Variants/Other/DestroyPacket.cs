@@ -1,8 +1,8 @@
-﻿using LiteNetLib.Utils;
+using LiteNetLib.Utils;
 
-namespace Lavender.Common.Networking.Packets.Variants.Entity;
+namespace Lavender.Common.Networking.Packets.Variants.Other;
 
-public class DestroyEntityPacket : GamePacket
+public class DestroyPacket : GamePacket
 {
     public uint NetId { get; set; }
 

@@ -1,17 +1,17 @@
 using Godot;
 using Lavender.Client.Menus;
 using Lavender.Common.Entity.Data;
-using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Mapping;
 using Lavender.Common.Networking.Packets.Variants.Other;
 using Lavender.Common.Networking.Packets.Variants.Protocol;
 using Lavender.Common.Registers;
+using PlayerEntity = Lavender.Common.Entity.GameEntities.PlayerEntity;
 
 namespace Lavender.Common.Controllers;
 
-public partial class PlayerController : BasicController
+public partial class PlayerController : BasicControllerBase
 {
     public override void Setup(uint netId, GameManager gameManager)
     {
@@ -19,7 +19,7 @@ public partial class PlayerController : BasicController
         
         if (ClientHud == null)
         {
-            GD.PrintErr($"[PlayerEntity#Setup]: ClientHud node is not set in the editor!");
+            GD.PrintErr($"[PlayerController#Setup]: ClientHud node is not set in the editor!");
             return;
         }
 
@@ -65,7 +65,7 @@ public partial class PlayerController : BasicController
         }, NetId);
     }
 
-    protected override void NetworkProcess(double delta)
+    public override void NetworkProcess(double delta)
     {
         base.NetworkProcess(delta);
 
@@ -81,7 +81,7 @@ public partial class PlayerController : BasicController
             _flagsInput &= ~EntityMoveFlags.Frozen;
         }
         
-        ReceiverEntity.HandleControllerInputs(new RawInputs()
+        ReceiverEntity.HandleControllerInputs(this, new RawInputs()
         {
             MoveInput = _moveInput,
             LookInput = _lookInput,
@@ -104,7 +104,7 @@ public partial class PlayerController : BasicController
         if (Manager.IsServer)
             return;
         
-        HandleMovementInputs();
+        ReadMovementInputs();
 
         if (Input.IsActionJustPressed("ui_cancel"))
         {
@@ -122,7 +122,7 @@ public partial class PlayerController : BasicController
             });
         }
     }
-    protected virtual void HandleMovementInputs()
+    protected virtual void ReadMovementInputs()
     {
         _moveInput = Vector3.Zero;
 		
@@ -169,11 +169,6 @@ public partial class PlayerController : BasicController
             _pauseMenuRootNode.Visible = false;
         }
     }
-    public void SetPlayerName(string name)
-    {
-        PlayerName = name;
-    }
-    
     
     // EVENT HANDLERS //
     private void OnAcknowledgePacket(AcknowledgePacket packet, uint sourceNetId)
@@ -186,7 +181,6 @@ public partial class PlayerController : BasicController
     
     
     public bool IsServerPlayerInitialized { get; protected set; } = false;
-    public string PlayerName { get; protected set; } = "__NULL__";
 
     [Export]
     public ClientHud ClientHud { get; protected set; }

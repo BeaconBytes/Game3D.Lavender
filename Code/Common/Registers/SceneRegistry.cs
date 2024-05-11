@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Godot;
 
-namespace Lavender.Common.Registers.Variants;
+namespace Lavender.Common.Registers;
 
 public class SceneRegistry
 {

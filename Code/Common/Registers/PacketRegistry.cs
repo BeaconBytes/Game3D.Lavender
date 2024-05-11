@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Networking.Packets;
+using Lavender.Common.Networking.Packets.Variants.Controller;
 using Lavender.Common.Networking.Packets.Variants.Entity;
 using Lavender.Common.Networking.Packets.Variants.Entity.Data;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
@@ -12,7 +13,7 @@ using Lavender.Common.Networking.Packets.Variants.Protocol;
 using LiteNetLib.Utils;
 using Environment = System.Environment;
 
-namespace Lavender.Common.Registers.Variants;
+namespace Lavender.Common.Registers;
 
 public class PacketRegistry
 {
@@ -20,6 +21,7 @@ public class PacketRegistry
     {
         // OTHER
         Register<DebugActionPacket>(PacketType.DebugAction);
+        Register<DestroyPacket>(PacketType.Destroy);
         
         // Protocol
         Register<AuthMePacket>(PacketType.AuthMe);
@@ -32,10 +34,11 @@ public class PacketRegistry
         // World/Map
         Register<MapNotificationPacket>(PacketType.MapNotification);
         
+        // Controller
+        Register<SpawnControllerPacket>(PacketType.SpawnController);
+        
         // Entity
         Register<SpawnEntityPacket>(PacketType.SpawnEntity);
-        Register<DestroyEntityPacket>(PacketType.DestroyEntity);
-        Register<ForceSyncEntityPacket>(PacketType.ForceSyncEntity);
         
         // Entity Updates
         Register<EntityRotatePacket>(PacketType.EntityRotate);
@@ -44,6 +47,7 @@ public class PacketRegistry
         Register<EntityInputPayloadPacket>(PacketType.EntityInputPayload);
         Register<EntityStatePayloadPacket>(PacketType.EntityStatePayload);
         Register<EntitySetGrabPacket>(PacketType.EntitySetGrab);
+        Register<SetControllingPacket>(PacketType.SetControlling);
         
         // Entity Data
         Register<EntityValueChangedPacket>(PacketType.EntityValueChanged);

@@ -4,9 +4,9 @@ using Lavender.Common.Exceptions;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Registers;
 
-namespace Lavender.Common.Entity;
+namespace Lavender.Common.Entity.GameEntities;
 
-public partial class HumanoidEntity : LivingEntity
+public partial class HumanoidEntityBase : LivingEntityBase
 {
     [Export] public Node3D HeadNode { get; protected set; }
 

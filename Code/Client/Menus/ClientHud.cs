@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Controllers;
 using Lavender.Common.Entity;
-using Lavender.Common.Entity.Variants;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Mapping;

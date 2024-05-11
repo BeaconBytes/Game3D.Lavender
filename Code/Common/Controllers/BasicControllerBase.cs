@@ -2,14 +2,16 @@ using System;
 using Godot;
 using Lavender.Client.Managers;
 using Lavender.Common.Entity;
+using Lavender.Common.Entity.GameEntities;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Controller;
 using Lavender.Common.Registers;
+using Lavender.Common.Utils;
 
 namespace Lavender.Common.Controllers;
 
-public partial class BasicController : Node, IController
+public partial class BasicControllerBase : Node, IController
 {
     public virtual void Setup(uint netId, GameManager gameManager)
     {
@@ -26,7 +28,6 @@ public partial class BasicController : Node, IController
             Register.Packets.Subscribe<SetControllingPacket>(OnSetControllingPacket);
         }
     }
-
     public override void _ExitTree()
     {
         base._ExitTree();
@@ -35,29 +36,10 @@ public partial class BasicController : Node, IController
         DetachReceiverEvent -= OnReceiverDetached;
     }
 
-
-    public override void _Process(double delta)
+    
+    public virtual void NetworkProcess(double delta)
     {
-        base._Process(delta);
-        
-        if (!IsSetup) 
-            return;
-        
-        _deltaTimer += delta;
-
-        while (_deltaTimer >= GameManager.NET_TICK_TIME)
-        {
-            _deltaTimer -= GameManager.NET_TICK_TIME;
-            NetworkProcess(GameManager.NET_TICK_TIME);
-            CurrentTick++;
-        }
-    }
-    /// <summary>
-    /// Called every network tick
-    /// </summary>
-    protected virtual void NetworkProcess(double delta)
-    {
-        if (NetId == (uint)StaticNetId.Null && CurrentTick % (GameManager.SERVER_TICK_RATE * 10f) == 0)
+        if (NetId == (uint)StaticNetId.Null && Manager.CurrentTick % (GameManager.SERVER_TICK_RATE * 10f) == 0)
             GD.PrintErr("NetId of Entity is NULL!");
     }
 
@@ -105,6 +87,9 @@ public partial class BasicController : Node, IController
         AttachReceiverEvent?.Invoke(this, ReceiverEntity);
     }
 
+    /// <summary>
+    /// (re)spawn the receiver this controller is attached to.
+    /// </summary>
     public virtual void RespawnReceiver() { }
 
     // EVENT HANDLERS //
@@ -150,17 +135,25 @@ public partial class BasicController : Node, IController
             });
         }
     }
+    
+    /// <summary>
+    /// Sets the display name(includeing node-name and network name) to the given string.
+    /// </summary>
+    public virtual void SetDisplayName(string name)
+    {
+        string sanitizedName = StringUtils.Sanitize(name, 24, false);
+        DisplayName = sanitizedName;
+        Name = $"{sanitizedName}[#{NetId}]";
+    }
 
     public uint NetId { get; private set; }
+    public string DisplayName { get; private set; }
     public bool IsSetup => (Manager != null);
     public bool IsClient { get; private set; }
     public GameManager Manager { get; private set; }
     public MapManager MapManager { get; private set; }
 
     public IGameEntity ReceiverEntity { get; protected set; }
-    protected uint CurrentTick { get; private set; }
-    
-    private double _deltaTimer = 0;
 
     public bool Destroyed { get; private set; }
     

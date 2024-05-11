@@ -5,7 +5,7 @@ using Godot;
 using Lavender.Client.Managers;
 using Lavender.Common.Controllers;
 using Lavender.Common.Entity;
-using Lavender.Common.Entity.Variants;
+using Lavender.Common.Entity.GameEntities;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Exceptions;
@@ -18,7 +18,9 @@ using Lavender.Common.Registers;
 using Lavender.Server.Managers;
 using LiteNetLib;
 using LiteNetLib.Utils;
+using BasicEntityBase = Lavender.Common.Entity.GameEntities.BasicEntityBase;
 using Environment = System.Environment;
+using HumanoidEntityBase = Lavender.Common.Entity.GameEntities.HumanoidEntityBase;
 
 namespace Lavender.Common.Managers;
 
@@ -90,6 +92,20 @@ public partial class GameManager : LoadableNode
             return;
         
         _netManager.PollEvents();
+        
+        _deltaTimer += delta;
+
+        while (_deltaTimer >= NET_TICK_TIME)
+        {
+            _deltaTimer -= NET_TICK_TIME;
+            foreach (KeyValuePair<uint,IController> pair in TickingControllers)
+            {
+                if (pair.Value.Destroyed)
+                    continue;
+                pair.Value.NetworkProcess(NET_TICK_TIME);
+            }
+            CurrentTick++;
+        }
     }
 
     protected void LoadMapByName(string name)
@@ -114,7 +130,6 @@ public partial class GameManager : LoadableNode
         MapSocketNode.AddChild(CurrentMapRootNode);
 
         MapManager = (MapManager)CurrentMapRootNode;
-        WaveManager = CurrentMapRootNode.GetNode<WaveManager>("WaveManager");
     }
     
     /// <summary>
@@ -157,7 +172,7 @@ public partial class GameManager : LoadableNode
             Node3D pairNode = (Node3D)pairEntity.Value;
 			
             Vector3 sendingRotation = pairEntity.Value.WorldRotation;
-            if (pairNode is HumanoidEntity pairHumanoid)
+            if (pairNode is HumanoidEntityBase pairHumanoid)
             {
                 sendingRotation = pairHumanoid.GetRotationWithHead();
             }
@@ -285,7 +300,7 @@ public partial class GameManager : LoadableNode
 
         NodeSpawnedEvent?.Invoke(gameEntity);
 
-        if (gameEntity is BasicEntity basicEntity)
+        if (gameEntity is BasicEntityBase basicEntity)
         {
             basicEntity.DestroyedEvent += OnDestroyedTriggered;
         }
@@ -311,12 +326,13 @@ public partial class GameManager : LoadableNode
             if (netNode is PlayerController)
                 SpawnedPlayerControllers.Remove(netNode.NetId);
             SpawnedControllers.Remove(netNode.NetId);
+            TickingControllers.Remove(netNode.NetId);
         }
         else if (netNode is IGameEntity)
             SpawnedEntities.Remove(netNode.NetId);
         SpawnedNodes.Remove(netNode.NetId);
         
-        if (netNode is BasicEntity basicEntity)
+        if (netNode is BasicEntityBase basicEntity)
         {
             basicEntity.DestroyedEvent -= OnDestroyedTriggered;
         }
@@ -465,6 +481,9 @@ public partial class GameManager : LoadableNode
     public const double SERVER_TICK_RATE = 30d;
     public const double NET_TICK_TIME = 1d / SERVER_TICK_RATE;
     public const int NET_BUFFER_SIZE = 1024;
+
+    private double _deltaTimer = 0;
+    public uint CurrentTick { get; private set; } = 0;
     
     public EnvManager EnvManager { get; private set; }
 
@@ -475,6 +494,7 @@ public partial class GameManager : LoadableNode
     protected readonly Dictionary<uint, INetNode> SpawnedNodes = new();
     protected readonly Dictionary<uint, IGameEntity> SpawnedEntities = new();
     protected readonly Dictionary<uint, IController> SpawnedControllers = new();
+    protected readonly Dictionary<uint, IController> TickingControllers = new();
     protected readonly Dictionary<uint, PlayerController> SpawnedPlayerControllers = new();
     
     protected readonly Dictionary<NetPeer, uint> PlayerPeers = new();
@@ -493,7 +513,6 @@ public partial class GameManager : LoadableNode
     [Export]
     protected Node CurrentMapRootNode;
     public MapManager MapManager { get; protected set; }
-    public WaveManager WaveManager { get; protected set; }
     public PathManager PathManager { get; protected set; }
 
     public bool TickingDisabled { get; protected set; } = true;

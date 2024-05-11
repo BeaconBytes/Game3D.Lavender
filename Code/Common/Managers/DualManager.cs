@@ -2,7 +2,7 @@ using System;
 using Lavender.Client.Managers;
 using Lavender.Server.Managers;
 
-namespace Lavender.Common.Managers.Variants;
+namespace Lavender.Common.Managers;
 
 public partial class DualManager : LoadableNode
 {

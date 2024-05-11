@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Lavender.Common.Registers.Variants;
 
 namespace Lavender.Common.Registers;
 
@@ -23,9 +22,11 @@ public static class Register
     {
         Packets.LoadDefaults();
         Scenes.LoadDefaults();
+        Controllers.LoadDefaults();
         Entities.LoadDefaults();
     }
-    
+
+    public static ControllerRegistry Controllers { get; } = new();
     public static PacketRegistry Packets { get; } = new();
     public static EntityRegistry Entities { get; } = new();
     public static SceneRegistry Scenes { get; } = new();
