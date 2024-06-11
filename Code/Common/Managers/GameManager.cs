@@ -257,11 +257,6 @@ public partial class GameManager : LoadableNode
             spawnedController.RespawnReceiver();
         }
 
-        if (spawnedController is PlayerController spawnedPlayerController && !IsClient)
-        {
-            
-        }
-
         return spawnedController;
     }
     protected IGameEntity SpawnEntity(EntityType entityType, uint presetNetId = (uint)StaticNetId.Null)

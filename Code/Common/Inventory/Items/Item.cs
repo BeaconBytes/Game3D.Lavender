@@ -2,5 +2,5 @@
 
 public class Item
 {
-    public static string ImageId { get; protected set; } = "NULL";
+    public string ImageId { get; protected set; } = "NULL";
 }

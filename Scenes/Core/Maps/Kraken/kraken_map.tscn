@@ -1,9 +1,9 @@
 [gd_scene load_steps=10 format=3 uid="uid://c64gt0y6ivlvh"]
 
-[ext_resource type="Script" path="res://Code/Common/Managers/Variants/Map/KrakenMapManager.cs" id="1_clhib"]
+[ext_resource type="Script" path="res://Code/Common/Managers/Map/KrakenMapManager.cs" id="1_clhib"]
 [ext_resource type="Material" uid="uid://7p0ra7eebd6x" path="res://Assets/Materials/Mapping/KrakenMap/kraken_flooring.material" id="2_djrxo"]
 [ext_resource type="Material" uid="uid://e13xjwhvybk7" path="res://Assets/Materials/Mapping/SpawnRoom/spawn_room_walls.material" id="2_nlja3"]
-[ext_resource type="Script" path="res://Code/Common/Managers/WaveManager.cs" id="2_ygui2"]
+[ext_resource type="Script" path="res://Code/Common/Managers/World/WaveManager.cs" id="2_ygui2"]
 [ext_resource type="Material" uid="uid://ctri4pvu5nxqn" path="res://Assets/Materials/Mapping/KrakenMap/kraken_bot_path.material" id="4_5woqv"]
 [ext_resource type="Material" uid="uid://exrwujj714b6" path="res://Assets/Materials/Mapping/KrakenMap/kraken_flooring_second.material" id="5_lwwng"]
 [ext_resource type="Material" uid="uid://bu5xlpm55x3sx" path="res://Assets/Materials/Mapping/KrakenMap/kraken_end_goal_area.material" id="6_1dm5d"]
@@ -21,9 +21,8 @@ size = Vector3(1, 2.62378, 5.43277)
 script = ExtResource("1_clhib")
 _playerSpawnPoints = [NodePath("SpawnPoints/Marker3D")]
 
-[node name="WaveManager" type="Node" parent="." node_paths=PackedStringArray("botPathPoints")]
+[node name="WaveManager" type="Node" parent="."]
 script = ExtResource("2_ygui2")
-botPathPoints = [NodePath("../BotWalkStagesPoints/Marker3D"), NodePath("../BotWalkStagesPoints/Marker3D2"), NodePath("../BotWalkStagesPoints/Marker3D3"), NodePath("../BotWalkStagesPoints/Marker3D4"), NodePath("../BotWalkStagesPoints/Marker3D5"), NodePath("../BotWalkStagesPoints/Marker3D6"), NodePath("../BotWalkStagesPoints/Marker3D7")]
 
 [node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
 navigation_mesh = SubResource("NavigationMesh_qjwuv")

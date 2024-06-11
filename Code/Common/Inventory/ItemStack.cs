@@ -38,7 +38,7 @@ public class ItemStack
     {
         if (uint.MaxValue - Count < amount)
         {
-            // MAX the stack I guess? We cant fit any more
+            // MAX the stack I guess? We cant fit anymore
             Count = uint.MaxValue;
             return;
         }

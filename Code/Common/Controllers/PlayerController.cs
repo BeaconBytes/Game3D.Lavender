@@ -91,8 +91,8 @@ public partial class PlayerController : BasicControllerBase
         _moveInput = Vector3.Zero;
         _lookInput = Vector3.Zero;
 
-        // If we just did a jump, remove its flags from our input flags so we dont
-        // repeatedly jump forever
+        // If we just did a jump, remove its flags from our input flags,
+        // so we don't repeatedly jump forever
         if (_flagsInput.HasFlag(EntityMoveFlags.Jump))
             _flagsInput &= ~EntityMoveFlags.Jump;
     }
@@ -150,7 +150,8 @@ public partial class PlayerController : BasicControllerBase
             }
         }
     }
-    public void TogglePause(bool forcePaused = false)
+
+    private void TogglePause(bool forcePaused = false)
     {
         _isPaused = !_isPaused;
         if (forcePaused)
