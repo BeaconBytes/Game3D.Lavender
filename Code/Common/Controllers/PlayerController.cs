@@ -50,7 +50,7 @@ public partial class PlayerController : BasicControllerBase
 
         if (ReceiverEntity is PlayerEntity)
         {
-            ShowNotification("Respawning...");
+            ShowNotification("Respawning...", 5);
         }
 
         ReceiverEntity.IsControlsFrozen = false;
@@ -69,7 +69,7 @@ public partial class PlayerController : BasicControllerBase
     {
         base.NetworkProcess(delta);
 
-        if (ReceiverEntity == null)
+        if (!IsClient && ReceiverEntity == null)
             return;
 
         if (ReceiverEntity.IsControlsFrozen && !_flagsInput.HasFlag(EntityMoveFlags.Frozen))

@@ -331,7 +331,9 @@ public partial class LivingEntityBase : BasicEntityBase
     private void OnTeleported(IGameEntity sourceEntity)
     {
         Velocity = Vector3.Zero;
-        NavAgent.SetVelocityForced(Vector3.Zero);
+
+        NavAgent?.SetVelocityForced(Vector3.Zero);
+
         _targetedLerpPosition = GlobalPosition;
     }
     

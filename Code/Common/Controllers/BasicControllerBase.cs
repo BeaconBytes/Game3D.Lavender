@@ -84,6 +84,8 @@ public partial class BasicControllerBase : Node, IController
         if (gameEntity == null)
             return;
 
+        gameEntity.AddController(this);
+
         AttachReceiverEvent?.Invoke(this, ReceiverEntity);
     }
 
@@ -143,7 +145,7 @@ public partial class BasicControllerBase : Node, IController
     {
         string sanitizedName = StringUtils.Sanitize(name, 24, false);
         DisplayName = sanitizedName;
-        Name = $"{sanitizedName}[#{NetId}]";
+        Name = $"Plr:{sanitizedName}[#{NetId}]";
     }
 
     public uint NetId { get; private set; }

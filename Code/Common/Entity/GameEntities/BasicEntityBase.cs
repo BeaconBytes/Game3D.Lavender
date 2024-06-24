@@ -82,7 +82,6 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
     /// <summary>
     /// Enable or Disable collision entirely and, when enabling, do so depending on client/server sidedness
     /// </summary>
-    /// <param name="isEnabled"></param>
     public virtual void ChangeCollisionEnabled(bool isEnabled)
     {
         SetCollisionLayerValue(1, false);
@@ -157,7 +156,13 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         }
     }
 
-    
+    public virtual void SetMasterController(IController controller)
+    {
+        if (AttachedControllers.Contains(controller))
+            AttachedControllers.Remove(controller);
+
+        AddController(controller, true);
+    }
     public virtual void AddController(IController controller, bool insertFirst = false)
     {
         if (AttachedControllers.Contains(controller))
@@ -256,10 +261,7 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
     
     public bool IsControlsFrozen
     {
-        get
-        {
-            return _isControlsFrozenVal;
-        }
+        get => _isControlsFrozenVal;
         set
         {
             _isControlsFrozenVal = value;

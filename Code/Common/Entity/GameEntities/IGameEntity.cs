@@ -32,6 +32,10 @@ public interface IGameEntity : INetNode
     public void Teleport(Vector3 position, Vector3? rotation = null);
 
     /// <summary>
+    /// Forces given controller into slot 0/master on this entity's AppliedControllers list
+    /// </summary>
+    public void SetMasterController(IController controller);
+    /// <summary>
     /// Adds given IController to list of applied IControllers
     /// </summary>
     public void AddController(IController controller, bool insertFirst = false);

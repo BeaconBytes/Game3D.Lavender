@@ -243,17 +243,21 @@ public partial class GameManager : LoadableNode
         }
 
         AddChild(spawnedNode);
-        spawnedNode.Name = $"Controller#{spawnedNetId}";
 
         NodeSpawnedEvent?.Invoke(spawnedController);
 
         spawnedController.DestroyedEvent += OnDestroyedTriggered;
-
+        
+        TickingControllers.Add(spawnedController.NetId, spawnedController);
+        
         if (spawnLinkedEntity && !IsClient)
         {
             EntityType entityType = Register.Entities.GetEntityType(spawnedController);
             IGameEntity spawnedEntity = SpawnEntity(entityType);
             spawnedController.SetControlling(spawnedEntity);
+            
+            spawnedEntity.SetMasterController(spawnedController);
+            
             spawnedController.RespawnReceiver();
         }
 
