@@ -156,6 +156,12 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         }
     }
 
+    public virtual IController GetMasterController()
+    {
+        if (AttachedControllers.Count == 0)
+            return null;
+        return AttachedControllers[0];
+    }
     public virtual void SetMasterController(IController controller)
     {
         if (AttachedControllers.Contains(controller))
@@ -210,6 +216,11 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
     private void TriggerValueChangedEvent(EntityValueChangedType type)
     {
         OnValueChangedEvent?.Invoke(this, type);
+    }
+
+    protected void TriggerCompletedNavPathEvent()
+    {
+        OnCompletedNavPathEvent?.Invoke(this);
     }
     
     
@@ -292,4 +303,5 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
     public event EntityDestroyEventHandler DestroyedEvent;
     public event EntityTeleportedEventHandler TeleportedEvent;
     public event EntityValueChangedHandler OnValueChangedEvent;
+    public event GameManager.SimpleNetNodeEventHandler OnCompletedNavPathEvent;
 }

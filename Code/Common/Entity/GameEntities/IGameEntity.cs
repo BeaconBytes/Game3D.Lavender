@@ -3,6 +3,7 @@ using Godot;
 using Lavender.Common.Controllers;
 using Lavender.Common.Entity.Buffs;
 using Lavender.Common.Entity.Data;
+using Lavender.Common.Managers;
 
 namespace Lavender.Common.Entity.GameEntities;
 
@@ -35,6 +36,11 @@ public interface IGameEntity : INetNode
     /// Forces given controller into slot 0/master on this entity's AppliedControllers list
     /// </summary>
     public void SetMasterController(IController controller);
+
+    /// <summary>
+    /// Gets the primary/active controller(slot 0) for this entity
+    /// </summary>
+    public IController GetMasterController();
     /// <summary>
     /// Adds given IController to list of applied IControllers
     /// </summary>
@@ -59,4 +65,7 @@ public interface IGameEntity : INetNode
 
     public List<IEntityBuff> AppliedBuffs { get; }
     public List<IEntityBuff> TickingAppliedBuffs { get; }
+    
+    
+    public event GameManager.SimpleNetNodeEventHandler OnCompletedNavPathEvent;
 }

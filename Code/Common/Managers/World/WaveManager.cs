@@ -33,7 +33,7 @@ public partial class WaveManager : LoadableNode
         Manager.NodeSpawnedEvent -= OnSpawnedNode;
         Manager.NodeDestroyedEvent -= OnDestroyedNode;
 
-        foreach (KeyValuePair<uint, LivingEntityBase> pair in _spawnedEnemyControllers)
+        foreach (KeyValuePair<uint, BasicControllerBase> pair in _spawnedEnemyControllers)
         {
             Manager.DestroyNode(pair.Value);
         }
@@ -41,7 +41,7 @@ public partial class WaveManager : LoadableNode
 
     private void OnCompletedBotPath(BrainControllerBase brainController)
     {
-        Manager.DestroyEntity(brainEntity);
+        Manager.DestroyNode(brainController);
     }
 
 
@@ -173,7 +173,10 @@ public partial class WaveManager : LoadableNode
     {
         if (target is EnemyEntityBase enemyEntity)
         {
-            enemyEntity.OnCompletedPathEvent += OnCompletedBotPath;
+            if (enemyEntity.GetMasterController() is BrainControllerBase brainController)
+            {
+                brainController.OnCompletedPathEvent += OnCompletedBotPath;
+            }
         }
     }
     private void OnDestroyedNode(INetNode target)

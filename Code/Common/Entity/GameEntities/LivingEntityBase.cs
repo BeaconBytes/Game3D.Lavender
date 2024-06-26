@@ -93,6 +93,42 @@ public partial class LivingEntityBase : BasicEntityBase
             });
         }
     }
+    
+    public override void _PhysicsProcess(double delta)
+    {
+        base._PhysicsProcess(delta);
+
+        if (Destroyed)
+            return;
+
+        if (!IsClient)
+        {
+            if (NavAgent.IsNavigationFinished())
+            {
+                Vector3 newVel = ProcessMovementVelocity(Vector3.Zero, delta: (float)delta);
+                OnVelocityComputed(newVel);
+            }
+            else
+            {
+                Vector3 curPos = GlobalPosition;
+                Vector3 nextPos = NavAgent.GetNextPathPosition();
+
+                EntityMoveFlags moveFlags = EntityMoveFlags.None;
+
+                if (IsControlsFrozen)
+                    moveFlags |= EntityMoveFlags.Frozen;
+
+                Vector3 newDirVector = curPos.DirectionTo(nextPos);
+                Vector3 newVel = ProcessMovementVelocity(newDirVector, moveFlags: moveFlags, delta: (float)delta);
+
+                if (NavAgent.AvoidanceEnabled)
+                    NavAgent.Velocity = newVel;
+                else
+                    OnVelocityComputed(newVel);
+            }
+            
+        }
+    }
 
     public virtual Vector3 ProcessMovementVelocity(Vector3 moveInput, EntityMoveFlags moveFlags = EntityMoveFlags.None, double delta = GameManager.NET_TICK_TIME)
     {
@@ -270,6 +306,12 @@ public partial class LivingEntityBase : BasicEntityBase
         ChangeCollisionEnabled(false);
         IsControlsFrozen = true;
         GrabbedById = sourceEntity.NetId;
+    }
+
+    private void OnVelocityComputed(Vector3 safeVelocity)
+    {
+        Velocity = safeVelocity;
+        MoveAndSlide();
     }
     
     
