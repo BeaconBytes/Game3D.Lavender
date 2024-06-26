@@ -28,7 +28,8 @@ public partial class BrainControllerBase : BasicControllerBase
     {
         if (ReceiverEntity?.NavAgent != null)
         {
-            ReceiverEntity.NavAgent.TargetPosition = position;
+            ReceiverEntity.SetNavTarget(position);
+            
             if (ReceiverEntity is not Node3D node3d)
                 throw new Exception("ReceiverEntity this BrainControllerBase is connected to IS NOT a Node3D type!");
             

@@ -50,6 +50,12 @@ public interface IGameEntity : INetNode
     /// Removes given IController from list of applied IControllers
     /// </summary>
     public void RemoveController(IController controller);
+
+    /// <summary>
+    /// Sets the nav agent's targeted position
+    /// </summary>
+    public void SetNavTarget(Vector3 pos);
+    
     
     public Vector3 WorldPosition { get; set; }
     public Vector3 WorldRotation { get; set; }

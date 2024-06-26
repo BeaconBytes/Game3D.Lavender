@@ -105,6 +105,12 @@ public partial class LivingEntityBase : BasicEntityBase
         {
             if (NavAgent.IsNavigationFinished())
             {
+                if (!_lastNavAgentCompleted)
+                {
+                    _lastNavAgentCompleted = true;
+                    TriggerCompletedNavPathEvent();
+                }
+                
                 Vector3 newVel = ProcessMovementVelocity(Vector3.Zero, delta: (float)delta);
                 OnVelocityComputed(newVel);
             }
@@ -313,7 +319,12 @@ public partial class LivingEntityBase : BasicEntityBase
         Velocity = safeVelocity;
         MoveAndSlide();
     }
-    
+
+    public void SetNavTarget(Vector3 pos)
+    {
+        _lastNavAgentCompleted = false;
+        NavAgent.TargetPosition = pos;
+    }
     
     
     // EVENT HANDLERS //
@@ -409,6 +420,8 @@ public partial class LivingEntityBase : BasicEntityBase
 
     protected bool EnableAutoMoveSlide = false;
 
+    private bool _lastNavAgentCompleted = true;
+    
     private Vector3 _targetedLerpPosition = Vector3.Zero;
     private Vector3 _targetedLerpRotation = Vector3.Zero;
     
