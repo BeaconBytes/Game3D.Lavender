@@ -48,6 +48,7 @@ public class PacketRegistry
         Register<EntityStatePayloadPacket>(PacketType.EntityStatePayload);
         Register<EntitySetGrabPacket>(PacketType.EntitySetGrab);
         Register<SetControllingPacket>(PacketType.SetControlling);
+        Register<EntityHitTargetPacket>(PacketType.EntityHitTarget);
         
         // Entity Data
         Register<EntityValueChangedPacket>(PacketType.EntityValueChanged);

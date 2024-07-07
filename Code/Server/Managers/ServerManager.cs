@@ -141,15 +141,15 @@ public partial class ServerManager : GameManager
 	}
 	private void OnDebugActionPacket(DebugActionPacket packet, uint sourceNetId)
 	{
-		// if (packet.Message.ToLower().Equals("debug"))
-		// {
-		// 	if (packet.Augment == 0)
-		// 	{
-		// 		LighthouseEntity ent = SpawnEntity<LighthouseEntity>(EntityType.Lighthouse);
-		// 		ent.Teleport(new Vector3(1, 3, 1));
-		// 		ent.SetDesiredPathLocation(new Vector3(0f, -10f, 0f));
-		// 	}
-		// }
+		if (packet.Message.ToLower().Equals("debug"))
+		{
+			if (packet.Augment == 0)
+			{
+				IGameEntity debugEnt = SpawnEntity<PlayerEntity>(EntityType.Player);
+				debugEnt.Teleport(MapManager.GetRandomPlayerSpawnPoint().Position);
+			}
+		}
+		
 	}
 	
 	

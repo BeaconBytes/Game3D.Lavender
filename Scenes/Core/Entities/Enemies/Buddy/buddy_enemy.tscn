@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://b6i4lr2eajcvu"]
 
 [ext_resource type="PackedScene" uid="uid://b4hbe5v6jhgrj" path="res://Assets/Models/Entities/Enemies/Buddy/buddy_enemy_model.glb" id="1_e101h"]
-[ext_resource type="Script" path="res://Code/Common/Entity/Variants/Enemies/BuddyEnemy.cs" id="1_lqat1"]
+[ext_resource type="Script" path="res://Code/Common/Entity/GameEntities/EnemyEntityBase.cs" id="1_lqat1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_c83hd"]
 radius = 0.66
@@ -10,15 +10,13 @@ height = 2.4
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_2hd1l"]
 radius = 1.5
 
-[node name="BuddyEnemy" type="CharacterBody3D" node_paths=PackedStringArray("_grabSocket", "_attackArea", "NavAgent", "ServerHiddenNodes")]
+[node name="BuddyEnemy" type="CharacterBody3D" node_paths=PackedStringArray("NavAgent", "ServerHiddenNodes")]
 collision_layer = 0
 collision_mask = 0
 platform_floor_layers = 4294967040
 script = ExtResource("1_lqat1")
-_grabSocket = NodePath("GrabSocket_Marker")
-_attackArea = NodePath("AttackRangeArea")
 NavAgent = NodePath("NavigationAgent3D")
-ServerHiddenNodes = [NodePath("BuddyEnemyModel")]
+ServerHiddenNodes = []
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
 navigation_layers = 129

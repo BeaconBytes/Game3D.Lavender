@@ -14,7 +14,7 @@ public static class Register
         { "loadup_menu_selection", "res://Scenes/Core/MainMenus/loadup_menu_selection.tscn" },
         { "loadup_menu_join", "res://Scenes/Core/MainMenus/loadup_menu_join.tscn" },
         
-        { "map_default", "res://Scenes/Core/Maps/Kraken/kraken_map.tscn" },
+        { "map_default", "res://Scenes/Core/Maps/Flux/flux_map.tscn" },
         { "map_debug", "res://Scenes/Core/Maps/DEBUG/debug_map.tscn" },
     };
 

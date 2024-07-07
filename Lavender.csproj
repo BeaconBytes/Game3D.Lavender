@@ -13,5 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Code\Common\Interfaces\" />
+    <Folder Include="Code\Common\Managers\World\" />
   </ItemGroup>
 </Project>

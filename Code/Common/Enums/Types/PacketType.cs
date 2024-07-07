@@ -35,6 +35,7 @@ public enum PacketType : byte
     EntityInputPayload,
     EntityStatePayload,
     EntitySetGrab,
+    EntityHitTarget,
     
     // Entity Data
     EntityValueChanged,

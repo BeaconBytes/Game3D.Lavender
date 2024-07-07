@@ -188,6 +188,13 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         AttachedControllers.Remove(controller);
     }
 
+    public void SetNavTarget(Vector3 pos)
+    {
+        NavAgent.TargetPosition = pos;
+        LookAt(new Vector3(pos.X, GlobalPosition.Y, pos.Z));
+        SnapRotationTo(GlobalRotation);
+    }
+
     /// <summary>
     /// Destroy this entity without emitting DestroyedEvent
     /// </summary>

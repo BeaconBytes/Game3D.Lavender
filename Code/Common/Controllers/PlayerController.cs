@@ -72,21 +72,24 @@ public partial class PlayerController : BasicControllerBase
         if (!IsClient && ReceiverEntity == null)
             return;
 
-        if (ReceiverEntity.IsControlsFrozen && !_flagsInput.HasFlag(EntityMoveFlags.Frozen))
+        if (ReceiverEntity != null)
         {
-            _flagsInput |= EntityMoveFlags.Frozen;
-        }
-        else if (!ReceiverEntity.IsControlsFrozen && _flagsInput.HasFlag(EntityMoveFlags.Frozen))
-        {
-            _flagsInput &= ~EntityMoveFlags.Frozen;
-        }
+            if (ReceiverEntity.IsControlsFrozen && !_flagsInput.HasFlag(EntityMoveFlags.Frozen))
+            {
+                _flagsInput |= EntityMoveFlags.Frozen;
+            }
+            else if (!ReceiverEntity.IsControlsFrozen && _flagsInput.HasFlag(EntityMoveFlags.Frozen))
+            {
+                _flagsInput &= ~EntityMoveFlags.Frozen;
+            }
         
-        ReceiverEntity.HandleControllerInputs(this, new RawInputs()
-        {
-            MoveInput = _moveInput,
-            LookInput = _lookInput,
-            FlagsInput = _flagsInput,
-        });
+            ReceiverEntity.HandleControllerInputs(this, new RawInputs()
+            {
+                MoveInput = _moveInput,
+                LookInput = _lookInput,
+                FlagsInput = _flagsInput,
+            });
+        }
         
         _moveInput = Vector3.Zero;
         _lookInput = Vector3.Zero;
@@ -95,6 +98,8 @@ public partial class PlayerController : BasicControllerBase
         // so we don't repeatedly jump forever
         if (_flagsInput.HasFlag(EntityMoveFlags.Jump))
             _flagsInput &= ~EntityMoveFlags.Jump;
+        if (_flagsInput.HasFlag(EntityMoveFlags.PrimaryAttack))
+            _flagsInput &= ~EntityMoveFlags.PrimaryAttack;
     }
 
     public override void _Process(double delta)
@@ -137,6 +142,9 @@ public partial class PlayerController : BasicControllerBase
 
         if (Input.IsActionJustPressed("move_jump"))
             _flagsInput |= EntityMoveFlags.Jump;
+
+        if (Input.IsActionJustPressed("attack_primary"))
+            _flagsInput |= EntityMoveFlags.PrimaryAttack;
     }
 	
     public override void _UnhandledInput( InputEvent @event )

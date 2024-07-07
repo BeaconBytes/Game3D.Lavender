@@ -1,0 +1,71 @@
+[gd_scene load_steps=7 format=3 uid="uid://dc1xbwc3qoy6i"]
+
+[ext_resource type="Script" path="res://Code/Common/Managers/Map/FluxMapManager.cs" id="1_62tbc"]
+[ext_resource type="Texture2D" uid="uid://dv1f2yk8nrpu" path="res://addons/kenney_prototype_textures/dark/texture_09.png" id="1_otjnn"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_vf015"]
+sky_top_color = Color(0.533333, 0.376471, 0.827451, 1)
+sky_horizon_color = Color(0.633333, 0.594118, 0.706863, 1)
+ground_bottom_color = Color(0, 0, 0, 1)
+ground_horizon_color = Color(0.633333, 0.594118, 0.706863, 1)
+
+[sub_resource type="Sky" id="Sky_xda21"]
+sky_material = SubResource("ProceduralSkyMaterial_vf015")
+
+[sub_resource type="Environment" id="Environment_k0nsi"]
+background_mode = 2
+sky = SubResource("Sky_xda21")
+tonemap_mode = 2
+ssao_enabled = true
+sdfgi_enabled = true
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pwolf"]
+albedo_texture = ExtResource("1_otjnn")
+uv1_triplanar = true
+
+[node name="FluxMap" type="Node3D" node_paths=PackedStringArray("_playerSpawnPoints")]
+script = ExtResource("1_62tbc")
+_playerSpawnPoints = [NodePath("SpawnPoints/Marker3D"), NodePath("SpawnPoints/Marker3D2"), NodePath("SpawnPoints/Marker3D3"), NodePath("SpawnPoints/Marker3D4"), NodePath("SpawnPoints/Marker3D5"), NodePath("SpawnPoints/Marker3D6"), NodePath("SpawnPoints/Marker3D7")]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_k0nsi")
+
+[node name="SpawnPoints" type="Node3D" parent="."]
+
+[node name="Marker3D" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, -16.1646, 3.81872, 16.2349)
+
+[node name="Marker3D2" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, -21.4678, 3.81872, -1.56023)
+
+[node name="Marker3D3" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, -12.747, 3.81872, -18.059)
+
+[node name="Marker3D4" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, 8.7014, 3.81872, -20.7695)
+
+[node name="Marker3D5" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, 21.0755, 3.81872, -7.21695)
+
+[node name="Marker3D6" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, 19.6613, 3.81872, 13.6422)
+
+[node name="Marker3D7" type="Marker3D" parent="SpawnPoints"]
+transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, 2.92684, 3.81872, 22.5987)
+
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="."]
+use_collision = true
+
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="CSGCombiner3D"]
+radius = 30.0
+height = 5.0
+sides = 16
+material = SubResource("StandardMaterial3D_pwolf")
+
+[node name="CSGCylinder3D2" type="CSGCylinder3D" parent="CSGCombiner3D"]
+operation = 2
+radius = 15.0
+height = 5.0
+sides = 16
+smooth_faces = false

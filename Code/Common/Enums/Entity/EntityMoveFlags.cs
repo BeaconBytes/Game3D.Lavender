@@ -11,4 +11,6 @@ public enum EntityMoveFlags : byte
     Sprint = 2,
     
     Frozen = 4,
+    
+    PrimaryAttack = 32,
 }

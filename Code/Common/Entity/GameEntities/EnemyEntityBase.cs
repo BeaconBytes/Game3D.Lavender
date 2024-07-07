@@ -1,6 +1,6 @@
 namespace Lavender.Common.Entity.GameEntities;
 
-public class EnemyEntityBase : LivingEntityBase
+public partial class EnemyEntityBase : LivingEntityBase
 {
     
 }
