@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Godot;
 using Lavender.Common.Controllers;
 using Lavender.Common.Entity.Data;
@@ -19,24 +20,20 @@ public partial class LivingEntityBase : BasicEntityBase
     public override void Setup(uint netId, GameManager manager)
     {
         base.Setup(netId, manager);
-        
+
         Stats = new EntityStats();
         
-        Register.Packets.Subscribe<EntityStatePayloadPacket>(OnStatePayloadPacket);
-        Register.Packets.Subscribe<EntityHitTargetPacket>(OnEntityHitTarget);
         if (IsClient)
         {
             Register.Packets.Subscribe<EntityTeleportPacket>(OnEntityTeleportPacket);
             Register.Packets.Subscribe<EntityRotatePacket>(OnEntityRotatePacket);
             Register.Packets.Subscribe<EntityValueChangedPacket>(OnValueChangedPacket);
             Register.Packets.Subscribe<EntitySetGrabPacket>(OnSetGrabbedPacket);
-            Register.Packets.Subscribe<EntityMoveToPacket>(OnEntityMoveToPacket);
             
             TeleportedEvent += OnTeleported;
         }
         else
         {
-            Register.Packets.Subscribe<EntityInputPayloadPacket>(OnInputPayloadPacket);
             OnValueChangedEvent += OnValueChanged;
         }
     }
@@ -58,42 +55,42 @@ public partial class LivingEntityBase : BasicEntityBase
     {
         base.NetworkProcess(delta);
 
-        if (IsClient)
-        {
-            if (Manager.ClientController.ReceiverEntity.NetId == NetId) 
-                return;
-            
-            // We're client-side, but aren't the entity being controlled by OUR client
-            LastProcessedState = LatestServerState;
-            _targetedLerpPosition = LatestServerState.position;
-            _targetedLerpRotation = LatestServerState.rotation;
-
-            WorldPosition = WorldPosition.Lerp(_targetedLerpPosition, Stats.FullMoveSpeed * (float)delta);
-            WorldRotation = WorldRotation.Lerp(_targetedLerpRotation, (float)delta);
-            
-            return;
-        }
-            
-        uint bufferIndex = 0;
-        bool foundBufferIndex = ( InputQueue.Count > 0 );
-        
-        while (InputQueue.Count > 0)
-        {
-            InputPayload inputPayload = InputQueue.Dequeue();
-            bufferIndex = inputPayload.tick % GameManager.NET_BUFFER_SIZE;
-
-            StatePayload statePayload = ProcessMovement(inputPayload);
-            StateBuffer[bufferIndex] = statePayload;
-        }
-
-        if (foundBufferIndex)
-        {
-            Manager.BroadcastPacketToClients(new EntityStatePayloadPacket()
-            {
-                NetId = NetId,
-                StatePayload = StateBuffer[bufferIndex],
-            });
-        }
+        // if (IsClient)
+        // {
+        //     if (Manager.ClientController.ReceiverEntity.NetId == NetId) 
+        //         return;
+        //     
+        //     // We're client-side, but aren't the entity being controlled by OUR client
+        //     LastProcessedState = LatestServerState;
+        //     _targetedLerpPosition = LatestServerState.position;
+        //     _targetedLerpRotation = LatestServerState.rotation;
+        //
+        //     WorldPosition = WorldPosition.Lerp(_targetedLerpPosition, Stats.FullMoveSpeed * (float)delta);
+        //     WorldRotation = WorldRotation.Lerp(_targetedLerpRotation, (float)delta);
+        //     
+        //     return;
+        // }
+        //     
+        // uint bufferIndex = 0;
+        // bool foundBufferIndex = ( InputQueue.Count > 0 );
+        //
+        // while (InputQueue.Count > 0)
+        // {
+        //     InputPayload inputPayload = InputQueue.Dequeue();
+        //     bufferIndex = inputPayload.tick % GameManager.NET_BUFFER_SIZE;
+        //
+        //     StatePayload statePayload = ProcessMovement(inputPayload);
+        //     StateBuffer[bufferIndex] = statePayload;
+        // }
+        //
+        // if (foundBufferIndex)
+        // {
+        //     Manager.BroadcastPacketToClients(new EntityStatePayloadPacket()
+        //     {
+        //         NetId = NetId,
+        //         StatePayload = StateBuffer[bufferIndex],
+        //     });
+        // }
     }
     
     public override void _PhysicsProcess(double delta)
@@ -171,55 +168,70 @@ public partial class LivingEntityBase : BasicEntityBase
         return vel;
     }
     
-    public override void HandleControllerInputs(IController source, RawInputs inputs)
+    public override void HandleControllerInputs(IController source, InputPayload input)
     {
         if (!Enabled || AttachedControllers.Count < 1 || AttachedControllers[0].NetId != source.NetId)
             return;
         
-        if (Manager.IsClient && Manager.ClientController.ReceiverEntity == this)
-        {
-            
-            if (!LatestServerState.Equals(default(StatePayload)) && 
-                (LastProcessedState.Equals(default(StatePayload)) || !LatestServerState.Equals(LastProcessedState)))
-            {
-                HandleServerReconciliation();
-            }
-            
-            uint bufferIndex = Manager.CurrentTick % GameManager.NET_BUFFER_SIZE;
-
-            Vector3 realMoveDirection = inputs.MoveInput.Rotated( Vector3.Up, GlobalTransform.Basis.GetEuler( ).Y ).Normalized( );
-            
-            InputPayload inputPayload = new()
-            {
-                tick  = Manager.CurrentTick,
-                moveInput = realMoveDirection,
-                lookInput = inputs.LookInput,
-                flagsInput = inputs.FlagsInput,
-            };
-            inputs.LookInput = Vector3.Zero;
-            
-            InputBuffer[bufferIndex] = inputPayload;
-            StateBuffer[bufferIndex] = ProcessMovement(inputPayload);
-	
-            Manager.SendPacketToServer(new EntityInputPayloadPacket()
-            {
-                NetId = NetId,
-                InputPayload = inputPayload,
-            });
-            
-            if(inputs.FlagsInput.HasFlag(EntityMoveFlags.PrimaryAttack))
-            {
-                
-            }
-            
-        }
+        // if (Manager.IsClient && Manager.ClientController.ReceiverEntity == this)
+        // {
+        //     
+        //     if (!LatestServerState.Equals(default(StatePayload)) && 
+        //         (LastProcessedState.Equals(default(StatePayload)) || !LatestServerState.Equals(LastProcessedState)))
+        //     {
+        //         HandleServerReconciliation();
+        //     }
+        //     
+        //     uint bufferIndex = Manager.CurrentTick % GameManager.NET_BUFFER_SIZE;
+        //
+        //     Vector3 realMoveDirection = inputs.MoveInput.Rotated( Vector3.Up, GlobalTransform.Basis.GetEuler( ).Y ).Normalized( );
+        //     
+        //     InputPayload inputPayload = new()
+        //     {
+        //         tick  = Manager.CurrentTick,
+        //         moveInput = realMoveDirection,
+        //         lookInput = inputs.LookInput,
+        //         flagsInput = inputs.FlagsInput,
+        //     };
+        //     inputs.LookInput = Vector3.Zero;
+        //     
+        //     InputBuffer[bufferIndex] = inputPayload;
+        //     StateBuffer[bufferIndex] = ProcessMovement(inputPayload);
+	       //
+        //     Manager.SendPacketToServer(new EntityInputPayloadPacket()
+        //     {
+        //         NetId = NetId,
+        //         InputPayload = inputPayload,
+        //     });
+        //     
+        //     if(inputs.FlagsInput.HasFlag(EntityMoveFlags.PrimaryAttack))
+        //     {
+        //         GD.Print("PrimaryAttack Triggered!");
+        //         if (Raycast3D.IsColliding())
+        //         {
+        //             Node colliderNode = (Node)Raycast3D.GetCollider();
+        //             if (colliderNode is PlayerEntity hitPlrEnt)
+        //             {
+        //                 Manager.SendPacketToServer(new EntityHitTargetPacket()
+        //                 {
+        //                     NetId = NetId,
+        //                     TargetNetId = hitPlrEnt.NetId,
+        //                     Tick = Manager.CurrentTick,
+        //                     WeaponType = WeaponType.Blaster,
+        //                 });
+        //             }
+        //         }
+        //     }
+        //     
+        // }
     }
+    
     
     
     /// <summary>
     /// Process InputPayload and then ApplyMovementChanges().
     /// </summary>
-    public virtual StatePayload ProcessMovement(InputPayload input)
+    public virtual StatePayload ProcessMovement(InputPayload input, double delta = GameManager.NET_TICK_TIME)
     {
         Vector3 newVel = ProcessMovementVelocity(input.moveInput, input.flagsInput);
         if (input.flagsInput.HasFlag(EntityMoveFlags.Frozen))
@@ -242,53 +254,20 @@ public partial class LivingEntityBase : BasicEntityBase
     /// <summary>
     /// Applies given movement inputs to the current entity and returns a Tuple containing the new GlobalPosition and GlobalRotation of this entity
     /// </summary>
-    protected Tuple<Vector3, Vector3> ApplyMovementChanges(Vector3 newVelocity, Vector3 inputRotate)
+    protected Tuple<Vector3, Vector3> ApplyMovementChanges(Vector3 newVelocity, Vector3 inputRotate, double delta = GameManager.NET_TICK_TIME)
     {
         Velocity = newVelocity;
-        MoveAndSlide(GameManager.NET_TICK_TIME);
+        MoveAndSlide(delta);
         
         Vector3 newRot = ApplyMovementRotation(inputRotate);
 
         return new Tuple<Vector3, Vector3>(GlobalPosition, newRot);
     }
-    protected void HandleServerReconciliation()
-    {
-        LastProcessedState = LatestServerState;
-
-        uint serverStateBufferIndex = LatestServerState.tick % GameManager.NET_BUFFER_SIZE;
-        float posError = LatestServerState.position.DistanceTo(StateBuffer[serverStateBufferIndex].position);
-
-        if (posError > 0.005f)
-        {
-            // Rewind
-            GlobalPosition = LatestServerState.position;
-            ReconciliationRotateTo(LatestServerState.rotation);
-			
-            // Update buffer at index of latest server state
-            StateBuffer[serverStateBufferIndex] = LatestServerState;
-			
-            // Re-simulate the rest of the ticks up to the current tick client-side
-            uint tickToProcess = LatestServerState.tick + 1;
-
-            while (tickToProcess < Manager.CurrentTick)
-            {
-                uint bufferIndex = tickToProcess % GameManager.NET_BUFFER_SIZE;
-				
-                // Process the new movement with reconciled state
-                StatePayload statePayload = ProcessMovement(InputBuffer[bufferIndex]);
-				
-                // Update buffer with recalculated state
-                StateBuffer[bufferIndex] = statePayload;
-
-                tickToProcess++;
-            }
-        }
-    }
 
     /// <summary>
     /// Used during reconciliation to "snap" rotation values to the given rot
     /// </summary>
-    protected virtual void ReconciliationRotateTo(Vector3 rot)
+    public virtual void ReconciliationRotateTo(Vector3 rot)
     {
         GlobalRotation = rot;
     }
@@ -331,8 +310,26 @@ public partial class LivingEntityBase : BasicEntityBase
         _lastNavAgentCompleted = false;
         NavAgent.TargetPosition = pos;
     }
-    
-    
+
+    public override void ChangeCollisionEnabled(bool isEnabled)
+    {
+        base.ChangeCollisionEnabled(isEnabled);
+
+
+        if (IsClient)
+        {
+            ActiveRaycast3D.SetCollisionMaskValue(1, true);
+            ActiveRaycast3D.SetCollisionMaskValue(8, false);
+        }
+        else
+        {
+            ActiveRaycast3D.SetCollisionMaskValue(1, false);
+            ActiveRaycast3D.SetCollisionMaskValue(8, true);
+        }
+
+    }
+
+
     // EVENT HANDLERS //
     private void OnEntityTeleportPacket(EntityTeleportPacket packet, uint sourceNetId)
     {
@@ -346,16 +343,6 @@ public partial class LivingEntityBase : BasicEntityBase
             return;
 
         GlobalRotation = packet.Rotation;
-    }
-    private void OnInputPayloadPacket(EntityInputPayloadPacket packet, uint sourceNetId)
-    {
-        if(packet.NetId == NetId && sourceNetId == NetId)
-            InputQueue.Enqueue(packet.InputPayload);
-    }
-    private void OnStatePayloadPacket(EntityStatePayloadPacket packet, uint sourceNetId)
-    {
-        if(packet.NetId == NetId && sourceNetId == (uint)StaticNetId.Server)
-            LatestServerState = packet.StatePayload;
     }
     private void OnValueChangedPacket(EntityValueChangedPacket packet, uint sourceNetId)
     {
@@ -378,45 +365,14 @@ public partial class LivingEntityBase : BasicEntityBase
         GrabbedById = packet.SourceNetId;
         Manager.BroadcastNotification($"{(packet.IsRelease ? "Released" : "Grabbed")} by id {packet.SourceNetId}", 2f);
     }
-    private void OnEntityMoveToPacket(EntityMoveToPacket packet, uint sourceNetId)
-    {
-        if (!IsClient || packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
-            return;
 
-        _targetedLerpPosition = packet.Position;
-        if (packet.Rotation.HasValue)
-            _targetedLerpRotation = packet.Rotation.Value;
-    }
-    private void OnEntityHitTarget(EntityHitTargetPacket packet, uint sourceNetId)
-    {
-        if (packet.TargetNetId == NetId && ((IsClient && sourceNetId == (uint)StaticNetId.Server) || (!IsClient && packet.NetId != packet.TargetNetId)))
-        {
-            if (packet.WeaponType == WeaponType.Blaster)
-            {
-                Velocity += new Vector3(0, 10f, -8f);
-            }
-
-            if (!IsClient && packet.NetId == sourceNetId)
-            {
-                Manager.BroadcastPacketToClientsOrdered(new EntityHitTargetPacket()
-                {
-                    NetId = packet.NetId,
-                    TargetNetId = packet.TargetNetId,
-                    WeaponType = packet.WeaponType,
-                });
-            }
-        }
-        
-    }
     private void OnTeleported(IGameEntity sourceEntity)
     {
         Velocity = Vector3.Zero;
 
         NavAgent?.SetVelocityForced(Vector3.Zero);
-
-        _targetedLerpPosition = GlobalPosition;
     }
-    
+
     private void OnValueChanged(BasicEntityBase entity, EntityValueChangedType type)
     {
         if (entity.NetId == NetId && !IsClient && entity is LivingEntityBase livingEntity)
@@ -441,28 +397,13 @@ public partial class LivingEntityBase : BasicEntityBase
     
     
     
-    public uint GrabbedById { get; protected set; }
     
-    protected EntityStats Stats;
+    public uint GrabbedById { get; protected set; }
 
     protected bool EnableAutoMoveSlide = false;
 
     private bool _lastNavAgentCompleted = true;
-    
-    private Vector3 _targetedLerpPosition = Vector3.Zero;
-    private Vector3 _targetedLerpRotation = Vector3.Zero;
-    
-    private Vector3 _lastSyncedPosition = Vector3.Zero;
-    private Vector3 _lastSyncedRotation = Vector3.Zero;
 
-    // Network Syncing //
-    protected readonly Queue<InputPayload> InputQueue = new();
-    
-    protected StatePayload LatestServerState;
-    protected StatePayload LastProcessedState;
-    
-    protected readonly StatePayload[] StateBuffer = new StatePayload[GameManager.NET_BUFFER_SIZE];
-    protected readonly InputPayload[] InputBuffer= new InputPayload[GameManager.NET_BUFFER_SIZE];
     
     
     

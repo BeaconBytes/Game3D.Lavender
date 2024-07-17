@@ -54,8 +54,13 @@ transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, 
 [node name="Marker3D7" type="Marker3D" parent="SpawnPoints"]
 transform = Transform3D(0.867201, 0, 0.497958, 0, 1, 0, -0.497958, 0, 0.867201, 2.92684, 3.81872, 22.5987)
 
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="SpawnPoints"]
+transform = Transform3D(0.935537, -0.15504, -0.317386, 0.35323, 0.410626, 0.840604, 0, -0.898526, 0.43892, 0, -3.35215, 0)
+
 [node name="CSGCombiner3D" type="CSGCombiner3D" parent="."]
 use_collision = true
+collision_layer = 255
+collision_mask = 255
 
 [node name="CSGCylinder3D" type="CSGCylinder3D" parent="CSGCombiner3D"]
 radius = 30.0

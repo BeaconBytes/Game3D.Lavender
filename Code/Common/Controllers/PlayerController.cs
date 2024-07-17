@@ -43,8 +43,6 @@ public partial class PlayerController : BasicControllerBase
     {
         base.RespawnReceiver();
         
-        ReceiverEntity.IsControlsFrozen = true;
-        
         Marker3D spawnPointSelected = MapManager.GetRandomPlayerSpawnPoint();
         ReceiverEntity.Teleport(spawnPointSelected.GlobalPosition, spawnPointSelected.GlobalRotation);
 
@@ -74,32 +72,33 @@ public partial class PlayerController : BasicControllerBase
 
         if (ReceiverEntity != null)
         {
-            if (ReceiverEntity.IsControlsFrozen && !_flagsInput.HasFlag(EntityMoveFlags.Frozen))
+            if (ReceiverEntity.IsControlsFrozen && !MoveFlagsInput.HasFlag(EntityMoveFlags.Frozen))
             {
-                _flagsInput |= EntityMoveFlags.Frozen;
+                MoveFlagsInput |= EntityMoveFlags.Frozen;
             }
-            else if (!ReceiverEntity.IsControlsFrozen && _flagsInput.HasFlag(EntityMoveFlags.Frozen))
+            else if (!ReceiverEntity.IsControlsFrozen && MoveFlagsInput.HasFlag(EntityMoveFlags.Frozen))
             {
-                _flagsInput &= ~EntityMoveFlags.Frozen;
+                MoveFlagsInput &= ~EntityMoveFlags.Frozen;
             }
         
-            ReceiverEntity.HandleControllerInputs(this, new RawInputs()
+            ReceiverEntity.HandleControllerInputs(this, new InputPayload()
             {
-                MoveInput = _moveInput,
-                LookInput = _lookInput,
-                FlagsInput = _flagsInput,
+                moveInput = MoveInput,
+                lookInput = LookInput,
+                flagsInput = MoveFlagsInput,
+                tick = Manager.CurrentTick,
             });
         }
         
-        _moveInput = Vector3.Zero;
-        _lookInput = Vector3.Zero;
+        MoveInput = Vector3.Zero;
+        LookInput = Vector3.Zero;
 
         // If we just did a jump, remove its flags from our input flags,
         // so we don't repeatedly jump forever
-        if (_flagsInput.HasFlag(EntityMoveFlags.Jump))
-            _flagsInput &= ~EntityMoveFlags.Jump;
-        if (_flagsInput.HasFlag(EntityMoveFlags.PrimaryAttack))
-            _flagsInput &= ~EntityMoveFlags.PrimaryAttack;
+        if (MoveFlagsInput.HasFlag(EntityMoveFlags.Jump))
+            MoveFlagsInput &= ~EntityMoveFlags.Jump;
+        if (MoveFlagsInput.HasFlag(EntityMoveFlags.PrimaryAttack))
+            MoveFlagsInput &= ~EntityMoveFlags.PrimaryAttack;
     }
 
     public override void _Process(double delta)
@@ -129,22 +128,25 @@ public partial class PlayerController : BasicControllerBase
     }
     protected virtual void ReadMovementInputs()
     {
-        _moveInput = Vector3.Zero;
+        Vector3 tmpMoveInput = Vector3.Zero;
 		
         if (Input.IsActionPressed("move_forward"))
-            _moveInput.Z = -1f;
+            tmpMoveInput.Z = -1f;
         else if (Input.IsActionPressed("move_backward"))
-            _moveInput.Z = 1f;
+            tmpMoveInput.Z = 1f;
         if (Input.IsActionPressed("move_left"))
-            _moveInput.X = -1f;
+            tmpMoveInput.X = -1f;
         else if (Input.IsActionPressed("move_right"))
-            _moveInput.X = 1f;
+            tmpMoveInput.X = 1f;
+
+        MoveInput = tmpMoveInput;
+        
 
         if (Input.IsActionJustPressed("move_jump"))
-            _flagsInput |= EntityMoveFlags.Jump;
+            MoveFlagsInput |= EntityMoveFlags.Jump;
 
         if (Input.IsActionJustPressed("attack_primary"))
-            _flagsInput |= EntityMoveFlags.PrimaryAttack;
+            MoveFlagsInput |= EntityMoveFlags.PrimaryAttack;
     }
 	
     public override void _UnhandledInput( InputEvent @event )
@@ -153,8 +155,10 @@ public partial class PlayerController : BasicControllerBase
         {
             if (!_isPaused)
             {
-                _lookInput.X += (-eventMouseMotion.Relative.X * _mouseSensitivity);
-                _lookInput.Y += (-eventMouseMotion.Relative.Y * _mouseSensitivity);
+                Vector3 tmpLookInput = LookInput;
+                tmpLookInput.X += (-eventMouseMotion.Relative.X * _mouseSensitivity);
+                tmpLookInput.Y += (-eventMouseMotion.Relative.Y * _mouseSensitivity);
+                LookInput = tmpLookInput;
             }
         }
     }
@@ -198,8 +202,4 @@ public partial class PlayerController : BasicControllerBase
 	
     private bool _isPaused = false;
     private float _mouseSensitivity = 0.045f;
-    
-    private Vector3 _lookInput = Vector3.Zero;
-    private Vector3 _moveInput = Vector3.Zero;
-    private EntityMoveFlags _flagsInput = EntityMoveFlags.None;
 }

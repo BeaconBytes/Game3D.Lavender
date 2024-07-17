@@ -142,8 +142,9 @@ public partial class GameManager : LoadableNode
         
         // Tell the just-joined-player AKA newPlayer about all other existing entities
         // and their position, rotation, etc.
-        if (!IsDualManager)
+        if (!IsDualManager || IsDualManagerConnected)
         {
+            GD.Print("Sending world packet...");
             SendPacketToClientOrdered(new WorldSetupPacket()
             {
                 worldName = DefaultMapName,
@@ -152,13 +153,13 @@ public partial class GameManager : LoadableNode
 
         foreach (KeyValuePair<uint,IController> pair in SpawnedControllers)
         {
-            uint pairNetid = pair.Key;
-            if (playerController.NetId == pairNetid)
+            uint pairNetId = pair.Key;
+            if (playerController.NetId == pairNetId)
                 continue;
 
             SendPacketToClientOrdered(new SpawnControllerPacket()
             {
-                NetId = pairNetid,
+                NetId = pairNetId,
                 ControllerType = Register.Controllers.GetControllerType(pair.Value),
             }, playerController.NetId);
         }
@@ -204,7 +205,12 @@ public partial class GameManager : LoadableNode
                 ReceiverNetId = pair.Value.ReceiverEntity?.NetId,
             }, playerController.NetId);
         }
-		
+
+        if (IsDualManager && !IsDualManagerConnected)
+        {
+            IsDualManagerConnected = true;
+            GD.Print("Single-player User Connected.");
+        }
     }
     
     protected IController SpawnController(ControllerType controllerType, bool spawnLinkedEntity = false, uint presetNetId = (uint)StaticNetId.Null)
@@ -489,6 +495,7 @@ public partial class GameManager : LoadableNode
     public bool IsClient { get; private set; } = false;
     public bool IsServer { get; private set; } = false;
     public bool IsDualManager { get; protected set; } = true;
+    public bool IsDualManagerConnected { get; protected set; } = true;
 
     protected readonly Dictionary<uint, INetNode> SpawnedNodes = new();
     protected readonly Dictionary<uint, IGameEntity> SpawnedEntities = new();

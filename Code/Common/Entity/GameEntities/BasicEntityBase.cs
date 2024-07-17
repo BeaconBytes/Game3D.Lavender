@@ -111,7 +111,7 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         }
     }
     
-    public virtual void HandleControllerInputs(IController source, RawInputs inputs)
+    public virtual void HandleControllerInputs(IController source, InputPayload input)
     {
         throw new NotImplementedException();
     }
@@ -124,7 +124,7 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         
         if (!IsClient)
         {
-            Manager.BroadcastPacketToClients(new EntityTeleportPacket()
+            Manager.BroadcastPacketToClientsOrdered(new EntityTeleportPacket()
             {
                 NetId = NetId,
                 Position = GlobalPosition,
@@ -154,6 +154,11 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
                 Rotation = GlobalRotation,
             });
         }
+    }
+
+    public Transform3D GetGlobalTransform()
+    {
+        return GlobalTransform;
     }
 
     public virtual IController GetMasterController()
@@ -193,6 +198,22 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         NavAgent.TargetPosition = pos;
         LookAt(new Vector3(pos.X, GlobalPosition.Y, pos.Z));
         SnapRotationTo(GlobalRotation);
+    }
+
+    public virtual List<IGameEntity>? RaycastEntityHit()
+    {
+        if (_raycast3D is null)
+            return null;
+
+        if (_raycast3D.IsColliding())
+        {
+            if (_raycast3D.GetCollider() is IGameEntity gameEntity)
+            {
+                return new List<IGameEntity>() { gameEntity };
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -268,8 +289,6 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
 
     public EntityStats Stats { get; protected set; }
 
-    public bool AutomaticMoveAndSlide { get; protected set; }
-
     public List<IController> AttachedControllers { get; private set; } = new();
     public List<IEntityBuff> AppliedBuffs { get; } = new();
 
@@ -291,6 +310,16 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
 
     [Export]
     public NavigationAgent3D NavAgent { get; protected set; }
+    
+    [Export]
+    private RayCast3D _raycast3D;
+    public RayCast3D ActiveRaycast3D
+    {
+        get
+        {
+            return _raycast3D;
+        }
+    }
 
 
     /// <summary>

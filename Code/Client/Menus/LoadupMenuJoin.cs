@@ -19,15 +19,22 @@ public partial class LoadupMenuJoin : LoadableMenu
 	private void OnConnectButtonPressed()
 	{
 		string ipAddress = _ipAddressInputBox.Text;
+
+		int port = 8778;
 		
-		
-		ipAddress = string.Concat(ipAddress.Where(c => c == '.' || char.IsDigit(c)));
-		if (ipAddress.Length > 16)
+		if (ipAddress.Contains(':'))
 		{
-			ipAddress = ipAddress.Substring(0, 16);
+			port = int.Parse(ipAddress.Substring(ipAddress.IndexOf(':') + 1));
+			ipAddress = ipAddress.Substring(0, ipAddress.IndexOf(':'));
+		}
+		
+		ipAddress = string.Concat(ipAddress.Where(c => c == '.' || char.IsDigit(c) || c == ':'));
+		if (ipAddress.Length > 21)
+		{
+			ipAddress = ipAddress.Substring(0, 21);
 		}
 
-		if (EnvManager.JoinServer(ipAddress, 8778))
+		if (EnvManager.JoinServer(ipAddress, port))
 		{
 			GD.Print("Attempting Join Server...");
 			_joining = true;
@@ -49,10 +56,10 @@ public partial class LoadupMenuJoin : LoadableMenu
 		string tmpAddr = ipAddress;
 		
 		
-		ipAddress = string.Concat(ipAddress.Where(c => c == '.' || char.IsDigit(c)));
-		if (ipAddress.Length > 16)
+		ipAddress = string.Concat(ipAddress.Where(c => c == '.' || char.IsDigit(c) || c == ':'));
+		if (ipAddress.Length > 21)
 		{
-			ipAddress = ipAddress.Substring(0, 16);
+			ipAddress = ipAddress.Substring(0, 21);
 		}
 
 		if (tmpAddr != ipAddress)

@@ -87,9 +87,9 @@ public partial class ServerManager : GameManager
 
 	private void OnNetConnRequested(ConnectionRequest request)
 	{
-		if (EnvManager.IsSinglePlayer && PlayerPeers.Count > 0)
+		if (EnvManager.IsSinglePlayer && PlayerPeers.Count > 1)
 		{
-			request.RejectForce();
+			request.Reject();
 			return;
 		}
 		if (PlayerPeers.Count < MAX_PLAYERS_COUNT)
@@ -173,7 +173,7 @@ public partial class ServerManager : GameManager
 				NetId = netId,
 				Position = gameEntity.WorldPosition,
 			});
-
+			
 			if (gameEntity is HumanoidEntityBase humanoidEntity)
 			{
 				Vector3 sendingRotation = humanoidEntity.GetRotationWithHead();
@@ -199,6 +199,10 @@ public partial class ServerManager : GameManager
 				NetId = netId,
 				ControllerType = Register.Controllers.GetControllerType(controller),
 			});
+			if (controller is PlayerController playerController)
+			{
+				InitPlayerController(playerController);
+			}
 		}
 		
 	}

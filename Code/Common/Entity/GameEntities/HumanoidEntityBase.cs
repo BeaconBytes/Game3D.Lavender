@@ -26,7 +26,7 @@ public partial class HumanoidEntityBase : LivingEntityBase
         return RotateHeadInput(inputRotate);
     }
 
-    protected override void ReconciliationRotateTo(Vector3 rot)
+    public override void ReconciliationRotateTo(Vector3 rot)
     {
         RotateHead(rot);
     }

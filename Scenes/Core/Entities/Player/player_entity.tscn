@@ -13,7 +13,7 @@ size = Vector3(0.25, 0.25, 1.5)
 [sub_resource type="CylinderMesh" id="CylinderMesh_fxi5x"]
 height = 1.4
 
-[node name="PlayerEntity" type="CharacterBody3D" node_paths=PackedStringArray("_camera", "HeadNode", "ServerHiddenNodes")]
+[node name="PlayerEntity" type="CharacterBody3D" node_paths=PackedStringArray("_camera", "HeadNode", "_raycast3D", "ServerHiddenNodes")]
 collision_layer = 0
 collision_mask = 0
 platform_floor_layers = 1
@@ -21,6 +21,7 @@ platform_wall_layers = 1
 script = ExtResource("1_r05bv")
 _camera = NodePath("Head/Camera3D")
 HeadNode = NodePath("Head")
+_raycast3D = NodePath("RayCast3D")
 ServerHiddenNodes = [NodePath("Head/Camera3D"), NodePath("Head/MeshInstance3D"), NodePath("Head/Eyes/MeshInstance3D"), NodePath("Body/MeshInstance3D")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
@@ -53,3 +54,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.3, 0)
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Body"]
 mesh = SubResource("CylinderMesh_fxi5x")
 skeleton = NodePath("../../..")
+
+[node name="RayCast3D" type="RayCast3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.67418, 0)
+target_position = Vector3(0, 0, -50)
+collision_mask = 129

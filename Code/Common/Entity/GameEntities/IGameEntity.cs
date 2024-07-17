@@ -9,6 +9,9 @@ namespace Lavender.Common.Entity.GameEntities;
 
 public interface IGameEntity : INetNode
 {
+    /// <summary>
+    /// Attempts to cleanly destroy this GameEntity
+    /// </summary>
     public void Destroy();
     
     /// <summary>
@@ -24,7 +27,7 @@ public interface IGameEntity : INetNode
     /// <summary>
     /// Handle input from an attached IController
     /// </summary>
-    public void HandleControllerInputs(IController source, RawInputs inputs);
+    public void HandleControllerInputs(IController source, InputPayload input);
 
     /// <summary>
     /// Teleport this entity instantly to the given location and, if not null, rotation.
@@ -52,9 +55,19 @@ public interface IGameEntity : INetNode
     public void RemoveController(IController controller);
 
     /// <summary>
+    /// Gets the GlobalTransform of this node
+    /// </summary>
+    public Transform3D GetGlobalTransform();
+
+    /// <summary>
     /// Sets the nav agent's targeted position
     /// </summary>
     public void SetNavTarget(Vector3 pos);
+
+    /// <summary>
+    /// Uses the set raycast to check for collisions with other game entities, returning them as a list. If none, returns null
+    /// </summary>
+    public List<IGameEntity>? RaycastEntityHit();
     
     
     public Vector3 WorldPosition { get; set; }
@@ -62,12 +75,12 @@ public interface IGameEntity : INetNode
     
     public string DisplayName { get; }
     public bool Enabled { get; }
-    public bool AutomaticMoveAndSlide { get; }
     public bool IsControlsFrozen { get; set; }
     public NavigationAgent3D NavAgent { get; }
 
     public List<IController> AttachedControllers { get; }
     public EntityStats Stats { get; }
+    public GameManager Manager { get; }
 
     public List<IEntityBuff> AppliedBuffs { get; }
     public List<IEntityBuff> TickingAppliedBuffs { get; }
