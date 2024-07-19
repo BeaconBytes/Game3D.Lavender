@@ -264,9 +264,10 @@ public partial class GameManager : LoadableNode
             
             spawnedEntity.SetMasterController(spawnedController);
             
-            spawnedController.RespawnReceiver();
+            spawnedController.ServerRespawnReceiver();
         }
 
+        GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Controller[{spawnedController.NetId}]");
         return spawnedController;
     }
     protected IGameEntity SpawnEntity(EntityType entityType, uint presetNetId = (uint)StaticNetId.Null)
@@ -310,6 +311,7 @@ public partial class GameManager : LoadableNode
             basicEntity.DestroyedEvent += OnDestroyedTriggered;
         }
         
+        GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Entity[{spawnedNetId}]");
         return gameEntity;
     }
 
@@ -364,7 +366,7 @@ public partial class GameManager : LoadableNode
 
     public void SendPacketToClientOrdered(GamePacket packet, uint netId)
     {
-        SendPacketToClient(packet, GetPeerFromNetId(netId));
+        SendPacketToClientOrdered(packet, GetPeerFromNetId(netId));
     }
     public void SendPacketToClient(GamePacket packet, NetPeer peer)
     {
@@ -456,6 +458,15 @@ public partial class GameManager : LoadableNode
     public IGameEntity GetEntityFromNetId(uint netId)
     {
         return SpawnedEntities.GetValueOrDefault(netId);
+    }
+
+    
+    /// <summary>
+    /// Finds and returns controller with given NetId or null
+    /// </summary>
+    public IController GetControllerFromNetId(uint netId)
+    {
+        return SpawnedControllers.GetValueOrDefault(netId);
     }
 
     /// <summary>

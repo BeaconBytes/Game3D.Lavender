@@ -39,16 +39,16 @@ public partial class PlayerController : BasicControllerBase
         }
     }
 
-    public override void RespawnReceiver()
+    public override void ServerRespawnReceiver()
     {
-        base.RespawnReceiver();
+        base.ServerRespawnReceiver();
         
         Marker3D spawnPointSelected = MapManager.GetRandomPlayerSpawnPoint();
         ReceiverEntity.Teleport(spawnPointSelected.GlobalPosition, spawnPointSelected.GlobalRotation);
 
         if (ReceiverEntity is PlayerEntity)
         {
-            ShowNotification("Respawning...", 5);
+            ShowNotification("Respawning...", 2);
         }
 
         ReceiverEntity.IsControlsFrozen = false;
@@ -63,15 +63,21 @@ public partial class PlayerController : BasicControllerBase
         }, NetId);
     }
 
+    
+    
     public override void NetworkProcess(double delta)
     {
         base.NetworkProcess(delta);
 
-        if (!IsClient && ReceiverEntity == null)
+        if (Manager.ClientNetId != NetId || (!IsClient && ReceiverEntity == null))
             return;
-
         if (ReceiverEntity != null)
         {
+            if (Manager.CurrentTick % GameManager.SERVER_TICK_RATE == 0)
+            {
+                // GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] PlrCtrl NetworkProcess() called!");
+            }
+            
             if (ReceiverEntity.IsControlsFrozen && !MoveFlagsInput.HasFlag(EntityMoveFlags.Frozen))
             {
                 MoveFlagsInput |= EntityMoveFlags.Frozen;
@@ -105,7 +111,7 @@ public partial class PlayerController : BasicControllerBase
     {
         base._Process(delta);
         
-        if (Manager.IsServer)
+        if (Manager.IsServer || Manager.ClientNetId != NetId)
             return;
         
         ReadMovementInputs();
@@ -151,6 +157,8 @@ public partial class PlayerController : BasicControllerBase
 	
     public override void _UnhandledInput( InputEvent @event )
     {
+        if (!IsClient || Manager.ClientNetId != NetId)
+            return;
         if ( @event is InputEventMouseMotion eventMouseMotion )
         {
             if (!_isPaused)
@@ -165,6 +173,9 @@ public partial class PlayerController : BasicControllerBase
 
     private void TogglePause(bool forcePaused = false)
     {
+        if (!IsClient || Manager.ClientNetId != NetId)
+            return;
+        
         _isPaused = !_isPaused;
         if (forcePaused)
             _isPaused = true;

@@ -7,8 +7,11 @@ using Lavender.Common.Entity.Buffs;
 using Lavender.Common.Entity.Data;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
+using Lavender.Common.Exceptions;
 using Lavender.Common.Managers;
+using Lavender.Common.Networking.Packets.Variants.Entity;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
+using Lavender.Common.Registers;
 using Lavender.Common.Utils;
 
 namespace Lavender.Common.Entity.GameEntities;
@@ -32,9 +35,14 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         MapManager = Manager.MapManager;
 
         SetDisplayName("");
+
+        if (IsClient)
+        {
+            Register.Packets.Subscribe<EntitySetMasterControllerPacket>(OnSetMasterControllerPacket);
+        }
     }
-    
-    
+
+
     public virtual void RecalculateVisibility()
     {
         if (ServerHiddenNodes == null)
@@ -169,15 +177,31 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
     }
     public virtual void SetMasterController(IController controller)
     {
-        if (AttachedControllers.Contains(controller))
-            AttachedControllers.Remove(controller);
+        if (controller is null)
+            throw new Exception("Invalid Master Controller given: null");
+        
+        GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Set MasterController on Entity[{NetId}] to Controller[{controller.NetId}]");
 
-        AddController(controller, true);
+        if (!AttachedControllers.Contains(controller))
+        {
+            throw new UnknownNetIdException("Controller given not added to AttachedControllers");
+        }
+
+        if (!IsClient)
+        {
+            Manager.BroadcastPacketToClientsOrdered(new EntitySetMasterControllerPacket()
+            {
+                TargetEntityNetId = NetId,
+                MasterControllerNetId = controller.NetId,
+            });
+        }
     }
     public virtual void AddController(IController controller, bool insertFirst = false)
     {
         if (AttachedControllers.Contains(controller))
             throw new Exception("Tried to add same controller multiple times to a BasicEntity!");
+        
+        GD.Print($"AddController[{(IsClient ? "CLIENT" : "SERVER")}] Controller[{controller.NetId}] to Entity[{NetId}]");
         
         if (insertFirst)
         {
@@ -200,7 +224,7 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         SnapRotationTo(GlobalRotation);
     }
 
-    public virtual List<IGameEntity>? RaycastEntityHit()
+    public virtual List<IGameEntity> RaycastEntityHit()
     {
         if (_raycast3D is null)
             return null;
@@ -249,6 +273,23 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
     protected void TriggerCompletedNavPathEvent()
     {
         OnCompletedNavPathEvent?.Invoke(this);
+    }
+    
+    
+    
+    // EVENT HANDLERS //
+    private void OnSetMasterControllerPacket(EntitySetMasterControllerPacket packet, uint sourceNetId)
+    {
+        if (packet.TargetEntityNetId != NetId || sourceNetId != (uint)StaticNetId.Server)
+            return;
+
+        IController controller = Manager.GetControllerFromNetId(packet.MasterControllerNetId);
+        if (controller is null)
+        {
+            throw new UnknownNetIdException();
+        }
+
+        SetMasterController(controller);
     }
     
     

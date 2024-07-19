@@ -27,6 +27,7 @@ public enum PacketType : byte
     // Entity Management
     SpawnEntity,
     SetControlling,
+    SetMasterController,
 
     // Entity Updates
     EntityRotate,

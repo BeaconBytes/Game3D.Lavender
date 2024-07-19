@@ -219,11 +219,13 @@ public partial class BasicControllerBase : Node, IController
     /// </summary>
     public void SetControlling(IGameEntity gameEntity)
     {
+            GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] SetControlling on controller[{NetId}] to entity[{gameEntity?.NetId}] called!");
         if (ReceiverEntity == gameEntity)
             return;
         
         if (ReceiverEntity != null)
         {
+            ReceiverEntity = null;
             DetachReceiverEvent?.Invoke(this, ReceiverEntity);
         }
         ReceiverEntity = gameEntity;
@@ -238,7 +240,7 @@ public partial class BasicControllerBase : Node, IController
     /// <summary>
     /// (re)spawn the receiver this controller is attached to.
     /// </summary>
-    public virtual void RespawnReceiver() { }
+    public virtual void ServerRespawnReceiver() { }
 
     // EVENT HANDLERS //
     
@@ -268,13 +270,14 @@ public partial class BasicControllerBase : Node, IController
         if (source != this || target is not IGameEntity targetGameEntity)
             return;
         
+        
         targetGameEntity.RecalculateVisibility();
         if (!IsClient)
         {
             Manager.BroadcastPacketToClientsOrdered(new SetControllingPacket()
             {
                 ControllerNetId = NetId,
-                ReceiverNetId = target.NetId == (uint)StaticNetId.Null ? null : target.NetId,
+                ReceiverNetId = target.NetId,
             });
         }
         else
@@ -297,7 +300,7 @@ public partial class BasicControllerBase : Node, IController
             Manager.BroadcastPacketToClientsOrdered(new SetControllingPacket()
             {
                 ControllerNetId = NetId,
-                ReceiverNetId = target.NetId == (uint)StaticNetId.Null ? null : target.NetId,
+                ReceiverNetId = target.NetId,
             });
         }
         else
