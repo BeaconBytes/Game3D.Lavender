@@ -119,11 +119,6 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         }
     }
     
-    public virtual void HandleControllerInputs(IController source, InputPayload input)
-    {
-        throw new NotImplementedException();
-    }
-    
     public void Teleport(Vector3 position, Vector3? rotation = null)
     {
         GlobalPosition = position;
@@ -162,6 +157,11 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
                 Rotation = GlobalRotation,
             });
         }
+    }
+
+    public virtual void SyncRotationTo(Vector3 rotation)
+    {
+        GlobalRotation = rotation;
     }
 
     public Transform3D GetGlobalTransform()

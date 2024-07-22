@@ -168,64 +168,6 @@ public partial class LivingEntityBase : BasicEntityBase
         return vel;
     }
     
-    public override void HandleControllerInputs(IController source, InputPayload input)
-    {
-        if (!Enabled || AttachedControllers.Count < 1 || AttachedControllers[0].NetId != source.NetId)
-            return;
-        
-        // if (Manager.IsClient && Manager.ClientController.ReceiverEntity == this)
-        // {
-        //     
-        //     if (!LatestServerState.Equals(default(StatePayload)) && 
-        //         (LastProcessedState.Equals(default(StatePayload)) || !LatestServerState.Equals(LastProcessedState)))
-        //     {
-        //         HandleServerReconciliation();
-        //     }
-        //     
-        //     uint bufferIndex = Manager.CurrentTick % GameManager.NET_BUFFER_SIZE;
-        //
-        //     Vector3 realMoveDirection = inputs.MoveInput.Rotated( Vector3.Up, GlobalTransform.Basis.GetEuler( ).Y ).Normalized( );
-        //     
-        //     InputPayload inputPayload = new()
-        //     {
-        //         tick  = Manager.CurrentTick,
-        //         moveInput = realMoveDirection,
-        //         lookInput = inputs.LookInput,
-        //         flagsInput = inputs.FlagsInput,
-        //     };
-        //     inputs.LookInput = Vector3.Zero;
-        //     
-        //     InputBuffer[bufferIndex] = inputPayload;
-        //     StateBuffer[bufferIndex] = ProcessMovement(inputPayload);
-	       //
-        //     Manager.SendPacketToServer(new EntityInputPayloadPacket()
-        //     {
-        //         NetId = NetId,
-        //         InputPayload = inputPayload,
-        //     });
-        //     
-        //     if(inputs.FlagsInput.HasFlag(EntityMoveFlags.PrimaryAttack))
-        //     {
-        //         GD.Print("PrimaryAttack Triggered!");
-        //         if (Raycast3D.IsColliding())
-        //         {
-        //             Node colliderNode = (Node)Raycast3D.GetCollider();
-        //             if (colliderNode is PlayerEntity hitPlrEnt)
-        //             {
-        //                 Manager.SendPacketToServer(new EntityHitTargetPacket()
-        //                 {
-        //                     NetId = NetId,
-        //                     TargetNetId = hitPlrEnt.NetId,
-        //                     Tick = Manager.CurrentTick,
-        //                     WeaponType = WeaponType.Blaster,
-        //                 });
-        //             }
-        //         }
-        //     }
-        //     
-        // }
-    }
-    
     
     
     /// <summary>

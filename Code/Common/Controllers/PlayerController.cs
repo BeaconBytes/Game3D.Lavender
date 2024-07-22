@@ -71,30 +71,6 @@ public partial class PlayerController : BasicControllerBase
 
         if (Manager.ClientNetId != NetId || (!IsClient && ReceiverEntity == null))
             return;
-        if (ReceiverEntity != null)
-        {
-            if (Manager.CurrentTick % GameManager.SERVER_TICK_RATE == 0)
-            {
-                // GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] PlrCtrl NetworkProcess() called!");
-            }
-            
-            if (ReceiverEntity.IsControlsFrozen && !MoveFlagsInput.HasFlag(EntityMoveFlags.Frozen))
-            {
-                MoveFlagsInput |= EntityMoveFlags.Frozen;
-            }
-            else if (!ReceiverEntity.IsControlsFrozen && MoveFlagsInput.HasFlag(EntityMoveFlags.Frozen))
-            {
-                MoveFlagsInput &= ~EntityMoveFlags.Frozen;
-            }
-        
-            ReceiverEntity.HandleControllerInputs(this, new InputPayload()
-            {
-                moveInput = MoveInput,
-                lookInput = LookInput,
-                flagsInput = MoveFlagsInput,
-                tick = Manager.CurrentTick,
-            });
-        }
         
         MoveInput = Vector3.Zero;
         LookInput = Vector3.Zero;

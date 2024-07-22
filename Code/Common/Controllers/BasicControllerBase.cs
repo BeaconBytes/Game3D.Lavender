@@ -39,6 +39,8 @@ public partial class BasicControllerBase : Node, IController
         {
             Register.Packets.Subscribe<EntityInputPayloadPacket>(OnInputPayloadPacket);
         }
+
+        SetDisplayName($"{Register.Controllers.GetControllerType(this).ToString()}");
     }
     public override void _ExitTree()
     {
@@ -95,25 +97,6 @@ public partial class BasicControllerBase : Node, IController
                         InputPayload = inputPayload,
                     });
                     
-                    // if(MoveFlagsInput.HasFlag(EntityMoveFlags.PrimaryAttack))
-                    // {
-                    //     GD.Print("PrimaryAttack Triggered!");
-                    //     if (Raycast3D.IsColliding())
-                    //     {
-                    //         Node colliderNode = (Node)Raycast3D.GetCollider();
-                    //         if (colliderNode is PlayerEntity hitPlrEnt)
-                    //         {
-                    //             Manager.SendPacketToServer(new EntityHitTargetPacket()
-                    //             {
-                    //                 NetId = NetId,
-                    //                 TargetNetId = hitPlrEnt.NetId,
-                    //                 Tick = Manager.CurrentTick,
-                    //                 WeaponType = WeaponType.Blaster,
-                    //             });
-                    //         }
-                    //     }
-                    // }
-                    
                 }
                 return;
             }
@@ -124,7 +107,8 @@ public partial class BasicControllerBase : Node, IController
             _targetedLerpRotation = LatestServerState.rotation;
 
             ReceiverEntity.WorldPosition = ReceiverEntity.WorldPosition.Lerp(_targetedLerpPosition, ReceiverEntity.Stats.FullMoveSpeed * (float)delta);
-            ReceiverEntity.WorldRotation = ReceiverEntity.WorldRotation.Lerp(_targetedLerpRotation, (float)delta);
+            //ReceiverEntity.WorldRotation = ReceiverEntity.WorldRotation.Lerp(_targetedLerpRotation, (float)delta);
+            ReceiverEntity.SyncRotationTo(_targetedLerpRotation);
             
             return;
         }

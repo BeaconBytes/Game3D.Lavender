@@ -28,7 +28,12 @@ public partial class HumanoidEntityBase : LivingEntityBase
 
     public override void ReconciliationRotateTo(Vector3 rot)
     {
-        RotateHead(rot);
+        RotateHeadTo(rot);
+    }
+
+    public override void SyncRotationTo(Vector3 rotation)
+    {
+        RotateHeadTo(rotation);
     }
 
     public Vector3 RotateHeadInput(Vector3 input)
@@ -45,7 +50,7 @@ public partial class HumanoidEntityBase : LivingEntityBase
         return new Vector3(HeadNode.Rotation.X, GlobalRotation.Y, 0f);
     }
 
-    public void RotateHead(Vector3 rotation)
+    public void RotateHeadTo(Vector3 rotation)
     {
         if (HeadNode == null)
             return;
@@ -86,6 +91,6 @@ public partial class HumanoidEntityBase : LivingEntityBase
         if (HeadNode == null)
             return;
         
-        RotateHead(packet.Rotation);
+        RotateHeadTo(packet.Rotation);
     }
 }

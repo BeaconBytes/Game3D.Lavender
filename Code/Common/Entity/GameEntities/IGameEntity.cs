@@ -23,11 +23,6 @@ public interface IGameEntity : INetNode
     /// Recalculates visibility of child nodes on this node for Server/Client usage
     /// </summary>
     public void RecalculateVisibility();
-    
-    /// <summary>
-    /// Handle input from an attached IController
-    /// </summary>
-    public void HandleControllerInputs(IController source, InputPayload input);
 
     /// <summary>
     /// Teleport this entity instantly to the given location and, if not null, rotation.
@@ -35,6 +30,12 @@ public interface IGameEntity : INetNode
     /// </summary>
     public void Teleport(Vector3 position, Vector3? rotation = null);
 
+    /// <summary>
+    /// Used for networking to sync rotation to last known rotation. Snaps immediately to given rotation.
+    /// Override for custom logic
+    /// </summary>
+    public void SyncRotationTo(Vector3 rotation);
+    
     /// <summary>
     /// Forces given controller into slot 0/master on this entity's AppliedControllers list
     /// </summary>

@@ -204,6 +204,11 @@ public partial class GameManager : LoadableNode
                 ControllerNetId = pair.Value.NetId,
                 ReceiverNetId = pair.Value.ReceiverEntity?.NetId,
             }, playerController.NetId);
+            SendPacketToClientOrdered(new EntitySetMasterControllerPacket()
+            {
+                MasterControllerNetId = pair.Value.NetId,
+                TargetEntityNetId = (pair.Value.ReceiverEntity == null ? (uint)StaticNetId.Null : pair.Value.ReceiverEntity.NetId),
+            }, playerController.NetId);
         }
 
         if (IsDualManager && !IsDualManagerConnected)
