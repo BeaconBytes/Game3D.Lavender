@@ -107,7 +107,6 @@ public partial class BasicControllerBase : Node, IController
             _targetedLerpRotation = LatestServerState.rotation;
 
             ReceiverEntity.WorldPosition = ReceiverEntity.WorldPosition.Lerp(_targetedLerpPosition, ReceiverEntity.Stats.FullMoveSpeed * (float)delta);
-            //ReceiverEntity.WorldRotation = ReceiverEntity.WorldRotation.Lerp(_targetedLerpRotation, (float)delta);
             ReceiverEntity.SyncRotationTo(_targetedLerpRotation);
             
             return;
@@ -163,7 +162,7 @@ public partial class BasicControllerBase : Node, IController
                 uint bufferIndex = tickToProcess % GameManager.NET_BUFFER_SIZE;
 				
                 // Process the new movement with reconciled state
-                StatePayload statePayload = livingEntity.ProcessMovement(InputBuffer[bufferIndex], GameManager.NET_TICK_TIME);
+                StatePayload statePayload = livingEntity.ProcessMovement(InputBuffer[bufferIndex]);
 				
                 // Update buffer with recalculated state
                 StateBuffer[bufferIndex] = statePayload;

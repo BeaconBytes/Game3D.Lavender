@@ -51,47 +51,6 @@ public partial class LivingEntityBase : BasicEntityBase
             OnValueChangedEvent -= OnValueChanged;
         }
     }
-    public override void NetworkProcess(double delta)
-    {
-        base.NetworkProcess(delta);
-
-        // if (IsClient)
-        // {
-        //     if (Manager.ClientController.ReceiverEntity.NetId == NetId) 
-        //         return;
-        //     
-        //     // We're client-side, but aren't the entity being controlled by OUR client
-        //     LastProcessedState = LatestServerState;
-        //     _targetedLerpPosition = LatestServerState.position;
-        //     _targetedLerpRotation = LatestServerState.rotation;
-        //
-        //     WorldPosition = WorldPosition.Lerp(_targetedLerpPosition, Stats.FullMoveSpeed * (float)delta);
-        //     WorldRotation = WorldRotation.Lerp(_targetedLerpRotation, (float)delta);
-        //     
-        //     return;
-        // }
-        //     
-        // uint bufferIndex = 0;
-        // bool foundBufferIndex = ( InputQueue.Count > 0 );
-        //
-        // while (InputQueue.Count > 0)
-        // {
-        //     InputPayload inputPayload = InputQueue.Dequeue();
-        //     bufferIndex = inputPayload.tick % GameManager.NET_BUFFER_SIZE;
-        //
-        //     StatePayload statePayload = ProcessMovement(inputPayload);
-        //     StateBuffer[bufferIndex] = statePayload;
-        // }
-        //
-        // if (foundBufferIndex)
-        // {
-        //     Manager.BroadcastPacketToClients(new EntityStatePayloadPacket()
-        //     {
-        //         NetId = NetId,
-        //         StatePayload = StateBuffer[bufferIndex],
-        //     });
-        // }
-    }
     
     public override void _PhysicsProcess(double delta)
     {
@@ -151,7 +110,9 @@ public partial class LivingEntityBase : BasicEntityBase
             gravityVector -= GravityVal * delta;
         }
 
-        float speed = Stats.FullMoveSpeed;
+        bool isSprinting = moveFlags.HasFlag(EntityMoveFlags.Sprint);
+
+        float speed = isSprinting ? (Stats.FullMoveSpeed * Stats.MovementSprintMultiplier) : Stats.FullMoveSpeed;
         
         if (IsOnFloor())
         {
