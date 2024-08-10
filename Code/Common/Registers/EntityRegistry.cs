@@ -15,11 +15,11 @@ public class EntityRegistry
     public void LoadDefaults()
     {
         // Game Entities
-        Register<PlayerEntity>(EntityType.Player, ControllerType.Player,"res://Scenes/Core/Entities/Player/player_entity.tscn");
+        Register<PlayerEntity>(EntityType.Player,"res://Scenes/Core/Entities/Player/player_entity.tscn");
         //Register<BuddyEnemy>(EntityType.BuddyEnemy, ControllerType.Unknown, "res://Scenes/Core/Entities/Enemies/Buddy/buddy_enemy.tscn");
     }
     
-    public void Register<TEntity>( EntityType entityType, ControllerType controllerType, string resPath ) where TEntity : IGameEntity
+    public void Register<TEntity>( EntityType entityType, string resPath ) where TEntity : IGameEntity
     {
         if ( entityType == EntityType.Unknown )
             throw new Exception( "Unable to register entity with type Unknown!" );
@@ -32,7 +32,6 @@ public class EntityRegistry
         }
         
         _resEntries.Add(entityType, resPath);
-        _controllerLinksEntries.Add(entityType, controllerType);
         _entityEntries.Add(entityType, typeof(TEntity));
     }
     public string GetEntityResPath( EntityType entityType )
@@ -71,26 +70,14 @@ public class EntityRegistry
 
         return entityType;
     }
-
+    
+    [Obsolete("No longer works after refactoring controller spawning of their entity")]
     public EntityType GetEntityType(IController controller)
     {
-        ControllerType controllerType = Registers.Register.Controllers.GetControllerType(controller);
-        return (from pair in _controllerLinksEntries where pair.Value == controllerType select pair.Key).FirstOrDefault(EntityType.Unknown);
-    }
-
-    public ControllerType GetControllerType(IGameEntity gameEntity)
-    {
-        EntityType entityType = GetEntityType(gameEntity);
-        
-        return _controllerLinksEntries.GetValueOrDefault(entityType, ControllerType.Unknown);
-    }
-
-    public ControllerType GetControllerType(EntityType entityType)
-    {
-        return _controllerLinksEntries.GetValueOrDefault(entityType, ControllerType.Unknown);
+        return EntityType.Unknown;
     }
     
+    
     private readonly Dictionary<EntityType, Type> _entityEntries = new( );
-    private readonly Dictionary<EntityType, ControllerType> _controllerLinksEntries = new();
     private readonly Dictionary<EntityType, string> _resEntries = new( );
 }

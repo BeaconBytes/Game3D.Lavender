@@ -50,6 +50,23 @@ public partial class GameManager : LoadableNode
             IsClient = false;
         }
         
+        bool isProperlyExported = OS.HasFeature("server") || OS.HasFeature("client");
+
+        if (isProperlyExported)
+        {
+            if (OS.HasFeature("server"))
+                IsServer = true;
+
+            if (OS.HasFeature("client"))
+                IsServer = false;
+
+            IsDebugMode = false;
+        }
+        else
+        {
+            IsDebugMode = true;
+        }
+        
         EnvManager = GetTree().CurrentScene.GetNode<EnvManager>("EnvManager");
         if (EnvManager == null)
             throw new BadNodeSetupException("EnvManager not found!");
@@ -144,7 +161,6 @@ public partial class GameManager : LoadableNode
         // and their position, rotation, etc.
         if (!IsDualManager || IsDualManagerConnected)
         {
-            GD.Print("Sending world packet...");
             SendPacketToClientOrdered(new WorldSetupPacket()
             {
                 worldName = DefaultMapName,
@@ -218,7 +234,7 @@ public partial class GameManager : LoadableNode
         }
     }
     
-    protected IController SpawnController(ControllerType controllerType, bool spawnLinkedEntity = false, uint presetNetId = (uint)StaticNetId.Null)
+    public IController SpawnController(ControllerType controllerType, bool spawnLinkedEntity = false, uint presetNetId = (uint)StaticNetId.Null)
     {
         uint spawnedNetId = presetNetId;
         if (spawnedNetId == (uint)StaticNetId.Null)
@@ -262,20 +278,14 @@ public partial class GameManager : LoadableNode
         TickingControllers.Add(spawnedController.NetId, spawnedController);
         
         if (spawnLinkedEntity && !IsClient)
-        {
-            EntityType entityType = Register.Entities.GetEntityType(spawnedController);
-            IGameEntity spawnedEntity = SpawnEntity(entityType);
-            spawnedController.SetControlling(spawnedEntity);
-            
-            spawnedEntity.SetMasterController(spawnedController);
-            
-            spawnedController.ServerRespawnReceiver();
-        }
+            spawnedController.InitSpawnReceiver();
 
-        GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Controller[{spawnedController.NetId}]");
+        if(IsDebugMode)
+            GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Controller[{spawnedController.NetId}]");
+        
         return spawnedController;
     }
-    protected IGameEntity SpawnEntity(EntityType entityType, uint presetNetId = (uint)StaticNetId.Null)
+    public IGameEntity SpawnEntity(EntityType entityType, uint presetNetId = (uint)StaticNetId.Null)
     {
         uint spawnedNetId = presetNetId;
         if (spawnedNetId == (uint)StaticNetId.Null)
@@ -316,7 +326,8 @@ public partial class GameManager : LoadableNode
             basicEntity.DestroyedEvent += OnDestroyedTriggered;
         }
         
-        GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Entity[{spawnedNetId}]");
+        if(IsDebugMode)
+            GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Entity[{spawnedNetId}]");
         return gameEntity;
     }
 
@@ -512,6 +523,7 @@ public partial class GameManager : LoadableNode
     public bool IsServer { get; private set; } = false;
     public bool IsDualManager { get; protected set; } = true;
     public bool IsDualManagerConnected { get; protected set; } = true;
+    public bool IsDebugMode { get; protected set; } = false;
 
     protected readonly Dictionary<uint, INetNode> SpawnedNodes = new();
     protected readonly Dictionary<uint, IGameEntity> SpawnedEntities = new();

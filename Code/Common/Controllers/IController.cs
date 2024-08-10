@@ -12,9 +12,14 @@ public interface IController : INetNode
     public void SetControlling(IGameEntity gameEntity);
 
     /// <summary>
-    /// Asks this controller to respawn its receiver and handle events and setup as needed.
+    /// Asks this controller to spawn and initialize its receiver, handling events as needed
     /// </summary>
-    public void ServerRespawnReceiver();
+    public void InitSpawnReceiver();
+
+    /// <summary>
+    /// Asks this controller to respawn its receiver
+    /// </summary>
+    public void RespawnReceiver(bool suppressNotify = false);
 
     /// <summary>
     /// Called once every Network Tick
