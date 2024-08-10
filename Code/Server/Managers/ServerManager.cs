@@ -136,7 +136,7 @@ public partial class ServerManager : GameManager
 	{
 		string name = StringUtils.Sanitize(packet.Username, 16, false);
 		
-		PlayerController playerController = SpawnController<PlayerController>(ControllerType.Player, true, sourceNetId);
+		PlayerController playerController = SpawnSpawnable<PlayerController>(EntityType.Player, sourceNetId);
 		playerController.SetDisplayName(name);
 	}
 	private void OnDebugActionPacket(DebugActionPacket packet, uint sourceNetId)
@@ -145,8 +145,7 @@ public partial class ServerManager : GameManager
 		{
 			if (packet.Augment == 0)
 			{
-				IGameEntity debugEnt = SpawnEntity<PlayerEntity>(EntityType.Player);
-				debugEnt.Teleport(MapManager.GetRandomPlayerSpawnPoint().Position);
+				// Debug button pressed?
 			}
 		}
 		

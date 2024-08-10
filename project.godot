@@ -17,6 +17,10 @@ boot_splash/bg_color=Color(0, 0, 0, 1)
 boot_splash/show_image=false
 config/icon="res://icon.png"
 
+[autoload]
+
+DiscordRPCLoader="*res://addons/discord-rpc-gd/nodes/discord_autoload.gd"
+
 [display]
 
 window/vsync/vsync_mode=0
@@ -27,7 +31,7 @@ project/assembly_name="Lavender"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/nv.file_system/plugin.cfg")
+enabled=PackedStringArray("res://addons/discord-rpc-gd/plugin.cfg", "res://addons/nv.file_system/plugin.cfg")
 
 [input]
 

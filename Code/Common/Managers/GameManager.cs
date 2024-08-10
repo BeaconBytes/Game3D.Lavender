@@ -217,8 +217,8 @@ public partial class GameManager : LoadableNode
             GD.Print("Single-player User Connected.");
         }
     }
-    
-    protected IController SpawnController(ControllerType controllerType, bool spawnLinkedEntity = false, uint presetNetId = (uint)StaticNetId.Null)
+
+    public IController SpawnController(ControllerType controllerType, uint presetNetId = (uint)StaticNetId.Null)
     {
         uint spawnedNetId = presetNetId;
         if (spawnedNetId == (uint)StaticNetId.Null)
@@ -234,48 +234,33 @@ public partial class GameManager : LoadableNode
         string resPath = Register.Controllers.GetResPath(controllerType);
 
         if (string.IsNullOrEmpty(resPath))
-            throw new Exception($"Invalid resource path: '{resPath}'");
+            throw new Exception($"Spawned ControllerType.{controllerType.ToString()} had unknown resource path: '{resPath}'");
 
         Node spawnedNode = Register.Scenes.GetInstance<Node>(resPath);
 
         if (spawnedNode == null)
-            throw new Exception("Null spawnedNode!");
-
-        if (spawnedNode is not IController spawnedController)
-            throw new Exception($"Spawned ControllerType.{controllerType.ToString()} doesn't inherit IController!{Environment.NewLine}Type name is '{spawnedNode.GetClass().GetBaseName()}'");
-
-        spawnedController.Setup(spawnedNetId, this);
-
-        SpawnedNodes.Add(spawnedNetId, spawnedController);
-        SpawnedControllers.Add(spawnedNetId, spawnedController);
-        if (spawnedController is PlayerController playerController)
-        {
-            SpawnedPlayerControllers.Add(spawnedController.NetId, playerController);
-        }
-
-        AddChild(spawnedNode);
-
-        NodeSpawnedEvent?.Invoke(spawnedController);
-
-        spawnedController.DestroyedEvent += OnDestroyedTriggered;
+            throw new Exception($"Spawned ControllerType.{controllerType.ToString()} gave a null spawnedNode!");
         
-        TickingControllers.Add(spawnedController.NetId, spawnedController);
         
-        if (spawnLinkedEntity && !IsClient)
-        {
-            EntityType entityType = Register.Entities.GetEntityType(spawnedController);
-            IGameEntity spawnedEntity = SpawnEntity(entityType);
-            spawnedController.SetControlling(spawnedEntity);
-            
-            spawnedEntity.SetMasterController(spawnedController);
-            
-            spawnedController.ServerRespawnReceiver();
-        }
+        if(spawnedNode is not IController controller)
+            throw new Exception($"Spawned ControllerType.{controllerType.ToString()} doesnt implement IController!");
+        
+        ((Node)controller).Reparent(this);
+        
+        // Store controller indexed by the NetId
+        SpawnedControllers.Add(spawnedNetId, controller);
+        TickingControllers.Add(spawnedNetId, controller);
+        SpawnedNodes.Add(spawnedNetId, controller);
+        if (controller is PlayerController plrController)
+            SpawnedPlayerControllers.Add(spawnedNetId, plrController);
+        controller.Setup(spawnedNetId, this);
+        NodeSpawnedEvent?.Invoke(controller);
+        controller.DestroyedEvent += OnDestroyedTriggered;
 
-        GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Controller[{spawnedController.NetId}]");
-        return spawnedController;
+        return controller;
     }
-    protected IGameEntity SpawnEntity(EntityType entityType, uint presetNetId = (uint)StaticNetId.Null)
+
+    public IGameEntity SpawnEntity(EntityType entityType, uint presetNetId = (uint)StaticNetId.Null)
     {
         uint spawnedNetId = presetNetId;
         if (spawnedNetId == (uint)StaticNetId.Null)
@@ -288,45 +273,119 @@ public partial class GameManager : LoadableNode
             spawnedNetId = GenerateNetId();
         }
 
-        string resPath = Register.Entities.GetEntityResPath(entityType);
+        string resPath = Register.Entities.GetResPath(entityType);
 
         if (string.IsNullOrEmpty(resPath))
-            throw new Exception($"Invalid resource path: '{resPath}'");
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} had unknown resource path: '{resPath}'");
+
+        Node spawnedNode = Register.Scenes.GetInstance<Node>(resPath);
+
+        if (spawnedNode == null)
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} gave a null spawnedNode!");
+        
+        
+        if(spawnedNode is not IGameEntity entity)
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} doesnt implement IGameEntity!");
+        
+        ((Node)entity).Reparent(this);
+        
+        // Store entity indexed by the NetId
+        SpawnedEntities.Add(spawnedNetId, entity);
+        SpawnedNodes.Add(spawnedNetId, entity);
+        entity.Setup(spawnedNetId, this);
+        NodeSpawnedEvent?.Invoke(entity);
+        
+        if (entity is BasicEntityBase basicEntity)
+        {
+            basicEntity.DestroyedEvent += OnDestroyedTriggered;
+        }
+
+        return entity;
+    }
+    
+    protected IController SpawnSpawnable(EntityType entityType, uint presetNetId = (uint)StaticNetId.Null)
+    {
+        uint spawnedNetId = presetNetId;
+        if (spawnedNetId == (uint)StaticNetId.Null)
+        {
+            spawnedNetId = GenerateNetId();
+        }
+        
+        while (SpawnedNodes.ContainsKey(spawnedNetId))
+        {
+            spawnedNetId = GenerateNetId();
+        }
+
+        string resPath = Register.Spawnables.GetResPath(entityType);
+
+        if (string.IsNullOrEmpty(resPath))
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} had unknown resource path: '{resPath}'");
 
         Node3D spawnedNode = Register.Scenes.GetInstance<Node3D>(resPath);
 
         if (spawnedNode == null)
-            throw new Exception("Null spawnedNode!");
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} gave a null spawnedNode!");
 
-        if (spawnedNode is not IGameEntity gameEntity)
-            throw new Exception($"Spawned EntityType.{entityType.ToString()} doesn't inherit IGameEntity!{Environment.NewLine}Type name is '{spawnedNode.GetClass().GetBaseName()}'");
+        Node foundController = spawnedNode.FindChild("Controller");
+        if (foundController == null)
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} doesnt have a Controller!");
+        
+        Node foundEntity = spawnedNode.FindChild("Entity");
+        if (foundEntity == null)
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} doesnt have a Entity!");
+        
+        
+        if(foundController is not IController controller)
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} doesnt have a Controller that implements IController!");
+        if(foundEntity is not IGameEntity entity)
+            throw new Exception($"Spawned EntityType.{entityType.ToString()} doesnt have a Entity that implements IGameEntity!");
+        
+        ((Node)controller).Reparent(this);
+        ((Node)entity).Reparent(this);
+        
+        // Store controller indexed by the NetId
+        SpawnedControllers.Add(spawnedNetId, controller);
+        TickingControllers.Add(spawnedNetId, controller);
+        SpawnedNodes.Add(spawnedNetId, controller);
+        if (controller is PlayerController plrController)
+            SpawnedPlayerControllers.Add(spawnedNetId, plrController);
+        controller.Setup(spawnedNetId, this);
+        NodeSpawnedEvent?.Invoke(controller);
+        controller.DestroyedEvent += OnDestroyedTriggered;
+        
+        // Store entity indexed by the NetId
+        SpawnedEntities.Add(spawnedNetId, entity);
+        SpawnedNodes.Add(spawnedNetId, entity);
+        entity.Setup(spawnedNetId, this);
+        NodeSpawnedEvent?.Invoke(entity);
+        
+        // Queue the original/root node we instantiated for deletion
+        // since we broke the controller & entity nodes off of this node already
+        spawnedNode.QueueFree();
 
-        gameEntity.Setup(spawnedNetId, this);
 
-        SpawnedEntities.Add(spawnedNetId, gameEntity);
-        SpawnedNodes.Add(spawnedNetId, gameEntity);
-
-        AddChild(spawnedNode);
-        spawnedNode.Name = $"Entity#{spawnedNetId}";
-
-        NodeSpawnedEvent?.Invoke(gameEntity);
-
-        if (gameEntity is BasicEntityBase basicEntity)
+        if (entity is BasicEntityBase basicEntity)
         {
             basicEntity.DestroyedEvent += OnDestroyedTriggered;
         }
         
-        GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Entity[{spawnedNetId}]");
-        return gameEntity;
+        //GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Spawned Entity[{spawnedNetId}]");
+        return controller;
+    }
+
+    public TController SpawnController<TController>(ControllerType controllerType, uint presetNetId = 0) where TController : IController
+    {
+        return (TController)SpawnController(controllerType, presetNetId);
     }
 
     public TEntity SpawnEntity<TEntity>(EntityType entityType, uint presetNetId = 0) where TEntity : IGameEntity
     {
         return (TEntity)SpawnEntity(entityType, presetNetId);
     }
-    public TController SpawnController<TController>(ControllerType controllerType, bool spawnLinkedEntity = false, uint presetNetId = 0) where TController : IController
+
+    public TController SpawnSpawnable<TController>(EntityType entityType, uint presetNetId = 0) where TController : IController
     {
-        return (TController)SpawnController(controllerType, spawnLinkedEntity, presetNetId);
+        return (TController)SpawnSpawnable(entityType, presetNetId);
     }
 
     public void DestroyNode(INetNode netNode)
