@@ -12,7 +12,7 @@ public interface IController : INetNode
     public void SetControlling(IGameEntity gameEntity);
 
     /// <summary>
-    /// Asks this controller to respawn its receiver and handle events and setup as needed.
+    /// Asks this controller to spawn and initialize its receiver, handling events as needed
     /// </summary>
     public void RespawnReceiver();
 

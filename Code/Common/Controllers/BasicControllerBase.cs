@@ -135,7 +135,10 @@ public partial class BasicControllerBase : Node, IController
             });
         }
     }
-    protected void HandleServerReconciliation()
+    /// <summary>
+    /// Handles reconciliation for the player, mainly for movement networking
+    /// </summary>
+    private void HandleServerReconciliation()
     {
         if (ReceiverEntity is not LivingEntityBase livingEntity)
             return;
@@ -221,7 +224,12 @@ public partial class BasicControllerBase : Node, IController
     }
 
     /// <summary>
-    /// (re)spawn the receiver this controller is attached to.
+    /// Spawn the receiver this controller is intended to attach to.
+    /// </summary>
+    public virtual void InitSpawnReceiver() { }
+    
+    /// <summary>
+    /// Respawn the connected receiver for this controller
     /// </summary>
     public virtual void RespawnReceiver() { }
 

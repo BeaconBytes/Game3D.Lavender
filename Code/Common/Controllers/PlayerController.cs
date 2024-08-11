@@ -1,7 +1,9 @@
 using Godot;
 using Lavender.Client.Menus;
 using Lavender.Common.Entity.Data;
+using Lavender.Common.Entity.GameEntities;
 using Lavender.Common.Enums.Entity;
+using Lavender.Common.Enums.Types;
 using Lavender.Common.Managers;
 using Lavender.Common.Networking.Packets.Variants.Mapping;
 using Lavender.Common.Networking.Packets.Variants.Other;
@@ -46,13 +48,14 @@ public partial class PlayerController : BasicControllerBase
 		Marker3D spawnPointSelected = MapManager.GetRandomPlayerSpawnPoint();
 		ReceiverEntity.Teleport(spawnPointSelected.GlobalPosition, spawnPointSelected.GlobalRotation);
 
-		if (ReceiverEntity is PlayerEntity)
+		if (!suppressNotify && ReceiverEntity is PlayerEntity)
 		{
 			ShowNotification("Respawning...", 2);
 		}
 
 		ReceiverEntity.IsControlsFrozen = false;
 	}
+	
 
 	public void ShowNotification(string msg, float shownForTime = 3.0f)
 	{
@@ -96,18 +99,9 @@ public partial class PlayerController : BasicControllerBase
 
 		if (Input.IsActionJustPressed("ui_cancel"))
 		{
-			_isPaused = !_isPaused;
-
-			Input.MouseMode = _isPaused ? Input.MouseModeEnum.Visible : Input.MouseModeEnum.Captured;
-		}
-
-		if (Input.IsActionJustPressed("debug_action"))
-		{
-			Manager.SendPacketToServer(new DebugActionPacket()
-			{
-				Message = "debug",
-				Augment = 0,
-			});
+			Input.MouseMode = (Input.MouseMode != Input.MouseModeEnum.Visible ? Input.MouseModeEnum.Visible : Input.MouseModeEnum.Captured);
+			
+			_isPaused = Input.MouseMode == Input.MouseModeEnum.Visible;
 		}
 	}
 	protected virtual void ReadMovementInputs()

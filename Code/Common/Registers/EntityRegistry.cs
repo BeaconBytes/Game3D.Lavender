@@ -70,6 +70,7 @@ public class EntityRegistry
         return entityType;
     }
     
+    
     private readonly Dictionary<EntityType, Type> _entityEntries = new( );
     private readonly Dictionary<EntityType, string> _resEntries = new( );
 }

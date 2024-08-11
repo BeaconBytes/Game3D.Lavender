@@ -13,8 +13,6 @@ public partial class EnvManager : Node
     
 
     public bool IsServer { get; protected set; } = false;
-    
-    public bool IsDebugMode { get; protected set; } = false;
 
     public override void _Ready()
     {
@@ -27,12 +25,6 @@ public partial class EnvManager : Node
 
             if (OS.HasFeature("client"))
                 IsServer = false;
-
-            IsDebugMode = false;
-        }
-        else
-        {
-            IsDebugMode = true;
         }
 
         // Load the defaults for registries
@@ -106,7 +98,6 @@ public partial class EnvManager : Node
                 GD.PrintErr($"Couldn't found a GameManager for resPath '{fullPath}'.");
                 return;
             }
-            
         }
         else
         {
