@@ -29,8 +29,7 @@ public class SceneRegistry
     {
         if ( String.IsNullOrEmpty( resPath ) )
             throw new Exception( $"Tried to GetInstance of null resource path" );
-        PackedScene scene = null;
-        if ( !_entries.TryGetValue( resPath, out scene ) )
+        if ( !_entries.TryGetValue( resPath, out PackedScene scene ) )
         {
             return default(T);
         }

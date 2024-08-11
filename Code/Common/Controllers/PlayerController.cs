@@ -39,9 +39,9 @@ public partial class PlayerController : BasicControllerBase
 		}
 	}
 
-	public override void ServerRespawnReceiver()
+	public override void RespawnReceiver()
 	{
-		base.ServerRespawnReceiver();
+		base.RespawnReceiver();
 		
 		Marker3D spawnPointSelected = MapManager.GetRandomPlayerSpawnPoint();
 		ReceiverEntity.Teleport(spawnPointSelected.GlobalPosition, spawnPointSelected.GlobalRotation);

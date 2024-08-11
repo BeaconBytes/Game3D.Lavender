@@ -223,7 +223,7 @@ public partial class BasicControllerBase : Node, IController
     /// <summary>
     /// (re)spawn the receiver this controller is attached to.
     /// </summary>
-    public virtual void ServerRespawnReceiver() { }
+    public virtual void RespawnReceiver() { }
 
     // EVENT HANDLERS //
     

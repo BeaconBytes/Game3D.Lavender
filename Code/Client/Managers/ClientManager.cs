@@ -112,7 +112,7 @@ public partial class ClientManager : GameManager
 	{
 		EntityType toSpawnType = packet.EntityType;
 		
-		SpawnSpawnable(toSpawnType, packet.NetId);
+		SpawnEntity(toSpawnType, packet.NetId);
 	}
 	private void OnSpawnControllerPacket(SpawnControllerPacket packet, uint sourceNetId)
 	{
