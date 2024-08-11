@@ -16,7 +16,6 @@ public class EntityRegistry
     {
         // Game Entities
         Register<PlayerEntity>(EntityType.Player,"res://Scenes/Core/Entities/Player/player_entity.tscn");
-        //Register<BuddyEnemy>(EntityType.BuddyEnemy, ControllerType.Unknown, "res://Scenes/Core/Entities/Enemies/Buddy/buddy_enemy.tscn");
     }
     
     public void Register<TEntity>( EntityType entityType, string resPath ) where TEntity : IGameEntity
@@ -34,7 +33,7 @@ public class EntityRegistry
         _resEntries.Add(entityType, resPath);
         _entityEntries.Add(entityType, typeof(TEntity));
     }
-    public string GetEntityResPath( EntityType entityType )
+    public string GetResPath( EntityType entityType )
     {
         if ( _resEntries.TryGetValue( entityType, out string result ) )
         {
@@ -69,12 +68,6 @@ public class EntityRegistry
         }
 
         return entityType;
-    }
-    
-    [Obsolete("No longer works after refactoring controller spawning of their entity")]
-    public EntityType GetEntityType(IController controller)
-    {
-        return EntityType.Unknown;
     }
     
     

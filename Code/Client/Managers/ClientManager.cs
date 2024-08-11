@@ -117,7 +117,7 @@ public partial class ClientManager : GameManager
 	private void OnSpawnControllerPacket(SpawnControllerPacket packet, uint sourceNetId)
 	{
 		ControllerType toSpawnType = packet.ControllerType;
-		IController controller = SpawnController(toSpawnType, false, packet.NetId);
+		IController controller = SpawnController(toSpawnType, packet.NetId);
 		
 		if (packet.NetId == ClientNetId && controller is PlayerController playerController)
 		{

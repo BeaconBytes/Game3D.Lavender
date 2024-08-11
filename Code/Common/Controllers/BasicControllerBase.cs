@@ -231,7 +231,7 @@ public partial class BasicControllerBase : Node, IController
     /// <summary>
     /// Respawn the connected receiver for this controller
     /// </summary>
-    public virtual void RespawnReceiver(bool suppressNotify = false) { }
+    public virtual void RespawnReceiver() { }
 
     // EVENT HANDLERS //
     

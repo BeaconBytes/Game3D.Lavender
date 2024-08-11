@@ -14,12 +14,7 @@ public interface IController : INetNode
     /// <summary>
     /// Asks this controller to spawn and initialize its receiver, handling events as needed
     /// </summary>
-    public void InitSpawnReceiver();
-
-    /// <summary>
-    /// Asks this controller to respawn its receiver
-    /// </summary>
-    public void RespawnReceiver(bool suppressNotify = false);
+    public void RespawnReceiver();
 
     /// <summary>
     /// Called once every Network Tick

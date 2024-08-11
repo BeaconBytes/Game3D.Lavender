@@ -24,10 +24,12 @@ public static class Register
         Scenes.LoadDefaults();
         Controllers.LoadDefaults();
         Entities.LoadDefaults();
+        ControlledEntities.LoadDefaults();
     }
 
     public static ControllerRegistry Controllers { get; } = new();
     public static PacketRegistry Packets { get; } = new();
     public static EntityRegistry Entities { get; } = new();
     public static SceneRegistry Scenes { get; } = new();
+    public static ControlledEntityRegistry ControlledEntities { get; } = new();
 }

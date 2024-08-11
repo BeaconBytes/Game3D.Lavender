@@ -41,21 +41,9 @@ public partial class PlayerController : BasicControllerBase
 		}
 	}
 
-	public override void InitSpawnReceiver()
+	public override void RespawnReceiver()
 	{
-		base.InitSpawnReceiver();
-
-		EntityType entType = EntityType.Player;
-		IGameEntity spawnedEntity = Manager.SpawnEntity(entType);
-		SetControlling(spawnedEntity);
-		spawnedEntity.SetMasterController(this);
-		
-		RespawnReceiver(true);
-	}
-
-	public override void RespawnReceiver(bool suppressNotify = false)
-	{
-		base.RespawnReceiver(suppressNotify);
+		base.RespawnReceiver();
 		
 		Marker3D spawnPointSelected = MapManager.GetRandomPlayerSpawnPoint();
 		ReceiverEntity.Teleport(spawnPointSelected.GlobalPosition, spawnPointSelected.GlobalRotation);

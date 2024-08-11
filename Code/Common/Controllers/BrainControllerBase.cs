@@ -22,8 +22,6 @@ public partial class BrainControllerBase : BasicControllerBase
     /// Then, somewhat handles rotation(initially) and does a network sync via Teleport() call
     /// on our ReceiverEntity.
     /// </summary>
-    /// <returns>True if it was successful, otherwise False.</returns>
-    /// <exception cref="Exception">Thrown when ReceiverEntity is not a Node3D</exception>
     public bool SetNavigationTarget(Vector3 position)
     {
         if (ReceiverEntity?.NavAgent != null)
