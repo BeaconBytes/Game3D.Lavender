@@ -16,6 +16,7 @@ public class EntityRegistry
     {
         // Game Entities
         Register<PlayerEntity>(EntityType.Player,"res://Scenes/Core/Entities/Player/player_entity.tscn");
+        Register<PlayerSoulEntity>(EntityType.PlayerSoul,"res://Scenes/Core/Entities/Player/player_soul_entity.tscn");
     }
     
     public void Register<TEntity>( EntityType entityType, string resPath ) where TEntity : IGameEntity

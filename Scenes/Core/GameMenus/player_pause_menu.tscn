@@ -1,0 +1,41 @@
+[gd_scene load_steps=3 format=3 uid="uid://cyyvmwbw4lpxn"]
+
+[ext_resource type="Theme" uid="uid://t24udtnrkd2d" path="res://Assets/Themes/menu.theme" id="1_cph78"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5ma7n"]
+bg_color = Color(0.819608, 0.34902, 0.988235, 0.0705882)
+
+[node name="PauseMenuRoot" type="Control"]
+visible = false
+layout_mode = 3
+anchor_right = 1.38889
+anchor_bottom = 1.38889
+offset_right = -0.00134277
+offset_bottom = -0.000732422
+metadata/_edit_use_anchors_ = true
+
+[node name="BackgroundPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5ma7n")
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -20.0
+offset_right = 20.0
+offset_bottom = 23.0
+grow_horizontal = 2
+theme = ExtResource("1_cph78")
+theme_type_variation = &"HeaderLarge"
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 72
+text = "PAUSED"
+uppercase = true

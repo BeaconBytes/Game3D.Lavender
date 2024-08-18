@@ -101,11 +101,11 @@ public partial class LivingEntityBase : BasicEntityBase
 
         double gravityVector = vel.Y;
         
-        if (IsOnFloor())
+        if (IsOnFloor() && GetMasterController()?.MovementMode is EntityMovementMode.Ground)
         {
             gravityVector = 0f;
         }
-        else
+        else if(GetMasterController()?.MovementMode is EntityMovementMode.Ground)
         {
             gravityVector -= GravityVal * delta;
         }
@@ -114,14 +114,15 @@ public partial class LivingEntityBase : BasicEntityBase
 
         float speed = isSprinting ? (Stats.FullMoveSpeed * Stats.MovementSprintMultiplier) : Stats.FullMoveSpeed;
         
-        if (IsOnFloor())
+        if (IsOnFloor() || GetMasterController().MovementMode is EntityMovementMode.Flight)
         {
             vel = vel.MoveToward(moveInput * speed, Stats.MovementAcceleration * (float)delta);
         }
 
         vel.Y = (float)gravityVector;
+        vel.Y = Mathf.Lerp(vel.Y, moveInput.Y * speed, Stats.MovementAcceleration * (float)delta); 
         
-        if (moveFlags.HasFlag(EntityMoveFlags.Jump) && IsOnFloor())
+        if (moveFlags.HasFlag(EntityMoveFlags.Jump) && IsOnFloor() && GetMasterController().MovementMode is EntityMovementMode.Ground)
         {
             vel.Y += Stats.MovementJumpImpulse;
         }
@@ -183,7 +184,7 @@ public partial class LivingEntityBase : BasicEntityBase
         RotateX(inputRotate.X);
         RotateY(inputRotate.Y);
         RotateZ(inputRotate.Z);
-        return GlobalRotation;
+        return Rotation;
     }
     
     

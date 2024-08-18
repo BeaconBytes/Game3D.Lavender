@@ -1,0 +1,14 @@
+[gd_scene load_steps=4 format=3 uid="uid://c0ynmppxe508l"]
+
+[ext_resource type="Script" path="res://Code/Common/Controllers/PlayerSoulController.cs" id="1_vxdrb"]
+[ext_resource type="PackedScene" uid="uid://b68j1qcfv7bo4" path="res://Scenes/Core/HUDs/player_hud_root.tscn" id="2_3134j"]
+[ext_resource type="PackedScene" uid="uid://cyyvmwbw4lpxn" path="res://Scenes/Core/GameMenus/player_pause_menu.tscn" id="3_pvj23"]
+
+[node name="PlayerSoulController" type="Node" node_paths=PackedStringArray("ClientHud", "_pauseMenuRootNode")]
+script = ExtResource("1_vxdrb")
+ClientHud = NodePath("HUDRoot")
+_pauseMenuRootNode = NodePath("PauseMenuRoot")
+
+[node name="HUDRoot" parent="." instance=ExtResource("2_3134j")]
+
+[node name="PauseMenuRoot" parent="." instance=ExtResource("3_pvj23")]
