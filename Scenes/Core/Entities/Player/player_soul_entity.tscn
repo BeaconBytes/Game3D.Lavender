@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://dlx05utjjtknl"]
+
+[ext_resource type="Script" path="res://Code/Common/Entity/GameEntities/PlayerSoulEntity.cs" id="1_r3527"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_cwm35"]
+radius = 0.75
+
+[node name="PlayerSoulEntity" type="CharacterBody3D" node_paths=PackedStringArray("_camera", "HeadNode", "_raycast3D", "ServerHiddenNodes")]
+script = ExtResource("1_r3527")
+_camera = NodePath("Head/Camera3D")
+HeadNode = NodePath("Head")
+_raycast3D = NodePath("RayCast3D")
+ServerHiddenNodes = []
+
+[node name="Head" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="Head"]
+cull_mask = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_cwm35")
+
+[node name="RayCast3D" type="RayCast3D" parent="."]
+target_position = Vector3(0, 0, -50)
+collision_mask = 129

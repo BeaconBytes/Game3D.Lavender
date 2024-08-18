@@ -12,6 +12,7 @@ public class ControlledEntityRegistry
     public void LoadDefaults()
     {
         Register(EntityType.Player, ControllerType.Player);
+        Register(EntityType.PlayerSoul, ControllerType.PlayerSoul);
     }
     
     public void Register( EntityType entityType, ControllerType controllerType )

@@ -4,5 +4,5 @@ public enum EntityType : byte
 {
     Unknown = 0,
     Player = 1,
-    BuddyEnemy,
+    PlayerSoul = 2,
 }

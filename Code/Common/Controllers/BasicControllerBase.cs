@@ -231,7 +231,7 @@ public partial class BasicControllerBase : Node, IController
     /// <summary>
     /// Respawn the connected receiver for this controller
     /// </summary>
-    public virtual void RespawnReceiver() { }
+    public virtual void RespawnReceiver(bool notifyReceiver = false) { }
 
     // EVENT HANDLERS //
     
@@ -360,7 +360,8 @@ public partial class BasicControllerBase : Node, IController
     
     protected readonly StatePayload[] StateBuffer = new StatePayload[GameManager.NET_BUFFER_SIZE];
     protected readonly InputPayload[] InputBuffer= new InputPayload[GameManager.NET_BUFFER_SIZE];
-    
+
+    public EntityMovementMode MovementMode { get; protected set; } = EntityMovementMode.Ground;
     
     
     // EVENTS //

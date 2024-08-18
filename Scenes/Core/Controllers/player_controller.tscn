@@ -1,87 +1,14 @@
-[gd_scene load_steps=6 format=3 uid="uid://chqcp7ntcjwsr"]
+[gd_scene load_steps=4 format=3 uid="uid://chqcp7ntcjwsr"]
 
 [ext_resource type="Script" path="res://Code/Common/Controllers/PlayerController.cs" id="1_vras7"]
-[ext_resource type="Script" path="res://Code/Client/Menus/ClientHud.cs" id="2_agly2"]
-[ext_resource type="Theme" uid="uid://t24udtnrkd2d" path="res://Assets/Themes/menu.theme" id="3_80rjq"]
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ke2va"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5ma7n"]
-bg_color = Color(0.819608, 0.34902, 0.988235, 0.0705882)
+[ext_resource type="PackedScene" uid="uid://b68j1qcfv7bo4" path="res://Scenes/Core/HUDs/player_hud_root.tscn" id="2_xvkwu"]
+[ext_resource type="PackedScene" uid="uid://cyyvmwbw4lpxn" path="res://Scenes/Core/GameMenus/player_pause_menu.tscn" id="3_tnkli"]
 
 [node name="PlayerController" type="Node" node_paths=PackedStringArray("ClientHud", "_pauseMenuRootNode")]
 script = ExtResource("1_vras7")
 ClientHud = NodePath("HUDRoot")
 _pauseMenuRootNode = NodePath("PauseMenuRoot")
 
-[node name="HUDRoot" type="Control" parent="." node_paths=PackedStringArray("_notificationLabelNode")]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 1
-script = ExtResource("2_agly2")
-_notificationLabelNode = NodePath("PanelContainer/NotificationLabel")
-metadata/_edit_use_anchors_ = true
+[node name="HUDRoot" parent="." instance=ExtResource("2_xvkwu")]
 
-[node name="PanelContainer" type="PanelContainer" parent="HUDRoot"]
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.282986
-anchor_right = 0.717014
-anchor_bottom = 0.197531
-grow_horizontal = 2
-mouse_filter = 1
-theme_override_styles/panel = SubResource("StyleBoxEmpty_ke2va")
-metadata/_edit_use_anchors_ = true
-
-[node name="NotificationLabel" type="Label" parent="HUDRoot/PanelContainer"]
-custom_minimum_size = Vector2(500, 128)
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 0
-mouse_filter = 1
-theme = ExtResource("3_80rjq")
-theme_type_variation = &"HeaderLarge"
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 26
-horizontal_alignment = 1
-autowrap_mode = 3
-
-[node name="PauseMenuRoot" type="Control" parent="."]
-visible = false
-layout_mode = 3
-anchor_right = 1.38889
-anchor_bottom = 1.38889
-offset_right = -0.00134277
-offset_bottom = -0.000732422
-metadata/_edit_use_anchors_ = true
-
-[node name="BackgroundPanel" type="Panel" parent="PauseMenuRoot"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_5ma7n")
-
-[node name="Label" type="Label" parent="PauseMenuRoot"]
-layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -20.0
-offset_right = 20.0
-offset_bottom = 23.0
-grow_horizontal = 2
-theme = ExtResource("3_80rjq")
-theme_type_variation = &"HeaderLarge"
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 72
-text = "PAUSED"
-uppercase = true
+[node name="PauseMenuRoot" parent="." instance=ExtResource("3_tnkli")]

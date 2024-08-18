@@ -39,16 +39,18 @@ public partial class PlayerController : BasicControllerBase
 		{
 			Register.Packets.Subscribe<AcknowledgePacket>(OnAcknowledgePacket);
 		}
+		
+		Input.MouseMode = Input.MouseModeEnum.Captured;
 	}
 
-	public override void RespawnReceiver()
+	public override void RespawnReceiver(bool notifyReceiver = false)
 	{
-		base.RespawnReceiver();
+		base.RespawnReceiver(notifyReceiver);
 		
 		Marker3D spawnPointSelected = MapManager.GetRandomPlayerSpawnPoint();
 		ReceiverEntity.Teleport(spawnPointSelected.GlobalPosition, spawnPointSelected.GlobalRotation);
 
-		if (!suppressNotify && ReceiverEntity is PlayerEntity)
+		if (notifyReceiver && ReceiverEntity is PlayerEntity)
 		{
 			ShowNotification("Respawning...", 2);
 		}
@@ -116,6 +118,14 @@ public partial class PlayerController : BasicControllerBase
 			tmpMoveInput.X = -1f;
 		else if (Input.IsActionPressed("move_right"))
 			tmpMoveInput.X = 1f;
+
+		if (MovementMode is EntityMovementMode.Flight)
+		{
+			if (Input.IsActionPressed("move_up"))
+				tmpMoveInput.Y = 1f;
+			else if (Input.IsActionPressed("move_down"))
+				tmpMoveInput.Y = -1f;
+		}
 		
 		MoveInput = tmpMoveInput;
 
@@ -126,8 +136,9 @@ public partial class PlayerController : BasicControllerBase
 			if (MoveFlagsInput.HasFlag(EntityMoveFlags.Sprint))
 				MoveFlagsInput &= ~EntityMoveFlags.Sprint;
 		
-		if (Input.IsActionJustPressed("move_jump"))
-			MoveFlagsInput |= EntityMoveFlags.Jump;
+		if(MovementMode is not EntityMovementMode.Flight)
+			if (Input.IsActionJustPressed("move_up"))
+				MoveFlagsInput |= EntityMoveFlags.Jump;
 
 		if (Input.IsActionJustPressed("attack_primary"))
 			MoveFlagsInput |= EntityMoveFlags.PrimaryAttack;

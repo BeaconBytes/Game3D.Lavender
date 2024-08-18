@@ -14,14 +14,14 @@ public interface IController : INetNode
     /// <summary>
     /// Asks this controller to spawn and initialize its receiver, handling events as needed
     /// </summary>
-    public void RespawnReceiver();
+    public void RespawnReceiver(bool notifyReceiver = false);
 
     /// <summary>
     /// Called once every Network Tick
     /// </summary>
     public void NetworkProcess(double delta);
     
-    
+    public EntityMovementMode MovementMode { get; }
     public Vector3 LookInput { get; }
     public Vector3 MoveInput { get; }
     public EntityMoveFlags MoveFlagsInput { get; }

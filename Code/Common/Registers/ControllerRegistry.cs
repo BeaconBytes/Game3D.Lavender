@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Controllers;
+using Lavender.Common.Entity.GameEntities;
 using Lavender.Common.Enums.Types;
 
 namespace Lavender.Common.Registers;
@@ -11,6 +12,7 @@ public class ControllerRegistry
     public void LoadDefaults()
     {
         Register<PlayerController>(ControllerType.Player, "res://Scenes/Core/Controllers/player_controller.tscn");
+        Register<PlayerSoulController>(ControllerType.PlayerSoul, "res://Scenes/Core/Controllers/player_soul_controller.tscn");
     }
     
     public void Register<TController>( ControllerType controllerType, string resPath ) where TController : IController

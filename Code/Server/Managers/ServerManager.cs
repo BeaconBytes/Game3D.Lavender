@@ -136,7 +136,7 @@ public partial class ServerManager : GameManager
 	{
 		string name = StringUtils.Sanitize(packet.Username, 16, false);
 		
-		PlayerController playerController = SpawnBundledEntity<PlayerController>(EntityType.Player, sourceNetId);
+		PlayerController playerController = SpawnBundledEntity<PlayerSoulController>(EntityType.PlayerSoul, sourceNetId);
 		playerController.SetDisplayName(name);
 	}
 	private void OnDebugActionPacket(DebugActionPacket packet, uint sourceNetId)

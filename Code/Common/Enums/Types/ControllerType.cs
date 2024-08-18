@@ -5,6 +5,7 @@ public enum ControllerType : byte
     Unknown = 0,
     
     Player,
+    PlayerSoul,
     
     // Enemies
     Buddy,
