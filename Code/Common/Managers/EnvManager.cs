@@ -3,7 +3,6 @@ using System.IO;
 using Godot;
 using Lavender.Common.Data.Config;
 using Lavender.Common.Registers;
-using Newtonsoft.Json;
 
 namespace Lavender.Common.Managers;
 
@@ -13,7 +12,26 @@ public partial class EnvManager : Node
     
 
     public bool IsServer { get; protected set; } = false;
+    public string ClientTargetIp { get; protected set; } = string.Empty;
+    public int ClientTargetPort { get; protected set; }  = 0;
+    public int ServerPort { get; protected set; } = 8778;
 
+    public bool IsDualManagers { get; protected set; } = false;
+    public bool IsSinglePlayer { get; protected set; } = false;
+
+    // private readonly JsonSerializer _jsonSerializer = new JsonSerializer();
+    
+
+    public GameManager CurrentGameManager { get; protected set; }
+
+    public UserConfig UserConfig { get; protected set; } = new UserConfig();
+
+    
+    private Node _curSceneRoot;
+    
+    private Node _globalSceneSocketNode;
+    
+    
     public override void _Ready()
     {
         bool isProperlyExported = OS.HasFeature("server") || OS.HasFeature("client");
@@ -105,31 +123,31 @@ public partial class EnvManager : Node
         }
     }
     
-    /// <summary>
-    /// Saves the given UserConfigData to the preset ConfigFileName and sets the cached UserConfig to it.
-    /// </summary>
-    public void SaveConfigData( UserConfig config )
-    {
-        using StreamWriter sw = new StreamWriter( $"./{ConfigFileName}" );
-        using JsonTextWriter tw = new JsonTextWriter( sw );
-        tw.Formatting = Formatting.Indented;
-        _jsonSerializer.Serialize( tw, config );
-        tw.Flush(  );
-            
-        UserConfig = config;
-    }
-    /// <summary>
-    /// Loads config data if it can (exists and is valid data) into UserConfig value
-    /// </summary>
-    private void LoadConfigData( )
-    {
-        if ( File.Exists( $"./{ConfigFileName}" ) )
-        {
-            using StreamReader sr = new StreamReader( $"./{ConfigFileName}" );
-            using JsonTextReader tr = new JsonTextReader( sr );
-            UserConfig = _jsonSerializer.Deserialize<UserConfig>( tr ) ?? new UserConfig( );
-        }
-    }
+    // /// <summary>
+    // /// Saves the given UserConfigData to the preset ConfigFileName and sets the cached UserConfig to it.
+    // /// </summary>
+    // public void SaveConfigData( UserConfig config )
+    // {
+    //     using StreamWriter sw = new StreamWriter( $"./{ConfigFileName}" );
+    //     using JsonTextWriter tw = new JsonTextWriter( sw );
+    //     tw.Formatting = Formatting.Indented;
+    //     _jsonSerializer.Serialize( tw, config );
+    //     tw.Flush(  );
+    //         
+    //     UserConfig = config;
+    // }
+    // /// <summary>
+    // /// Loads config data if it can (exists and is valid data) into UserConfig value
+    // /// </summary>
+    // private void LoadConfigData( )
+    // {
+    //     if ( File.Exists( $"./{ConfigFileName}" ) )
+    //     {
+    //         using StreamReader sr = new StreamReader( $"./{ConfigFileName}" );
+    //         using JsonTextReader tr = new JsonTextReader( sr );
+    //         UserConfig = _jsonSerializer.Deserialize<UserConfig>( tr ) ?? new UserConfig( );
+    //     }
+    // }
 
     public bool JoinServer(string ipAddress, int port)
     {
@@ -154,23 +172,4 @@ public partial class EnvManager : Node
         
         GotoScene(Register.SceneTable["env_dual"], false, true);
     }
-
-    public string ClientTargetIp { get; protected set; } = string.Empty;
-    public int ClientTargetPort { get; protected set; }  = 0;
-    public int ServerPort { get; protected set; } = 8778;
-
-    public bool IsDualManagers { get; protected set; } = false;
-    public bool IsSinglePlayer { get; protected set; } = false;
-
-    private readonly JsonSerializer _jsonSerializer = new JsonSerializer();
-    
-
-    public GameManager CurrentGameManager { get; protected set; }
-
-    public UserConfig UserConfig { get; protected set; } = new UserConfig();
-
-    
-    private Node _curSceneRoot;
-    
-    private Node _globalSceneSocketNode;
 }

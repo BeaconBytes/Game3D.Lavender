@@ -1,19 +1,11 @@
-<Project Sdk="Godot.NET.Sdk/4.4.77-dev">
+<Project Sdk="Godot.NET.Sdk/4.3.7-dev">
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net7.0</TargetFramework>
     <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'ios' ">net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
-    <Nullable>disable</Nullable>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\LiteNetLib-Godot\LiteNetLib\LiteNetLib.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Code\Common\Interfaces\" />
-    <Folder Include="Code\Common\Managers\World\" />
   </ItemGroup>
 </Project>
