@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using Lavender.Common.Controllers;
+using Lavender.Common.Controllers.Enemies;
 using Lavender.Common.Entity.GameEntities;
 using Lavender.Common.Enums.Types;
 
@@ -9,10 +10,15 @@ namespace Lavender.Common.Registers;
 
 public class ControllerRegistry
 {
+    private readonly Dictionary<ControllerType, Type> _ctrlEntries = new( );
+    private readonly Dictionary<ControllerType, string> _resEntries = new( );
+    
+    
     public void LoadDefaults()
     {
         Register<PlayerController>(ControllerType.Player, "res://Scenes/Core/Controllers/player_controller.tscn");
         Register<PlayerSoulController>(ControllerType.PlayerSoul, "res://Scenes/Core/Controllers/player_soul_controller.tscn");
+        Register<BuddyController>(ControllerType.Buddy, "res://Scenes/Core/Controllers/buddy_controller.scn");
     }
     
     public void Register<TController>( ControllerType controllerType, string resPath ) where TController : IController
@@ -66,7 +72,4 @@ public class ControllerRegistry
 
         return entityType;
     }
-
-    private readonly Dictionary<ControllerType, Type> _ctrlEntries = new( );
-    private readonly Dictionary<ControllerType, string> _resEntries = new( );
 }

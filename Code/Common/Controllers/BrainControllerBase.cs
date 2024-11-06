@@ -12,6 +12,10 @@ namespace Lavender.Common.Controllers;
 
 public partial class BrainControllerBase : BasicControllerBase
 {
+    private Vector3 _moveInput = Vector3.Zero;
+    private EntityMoveFlags _flagsInput = EntityMoveFlags.None;
+    
+    
     public override void Setup(uint netId, GameManager gameManager)
     {
         base.Setup(netId, gameManager);
@@ -39,6 +43,4 @@ public partial class BrainControllerBase : BasicControllerBase
         return false;
     }
     
-    private Vector3 _moveInput = Vector3.Zero;
-    private EntityMoveFlags _flagsInput = EntityMoveFlags.None;
 }

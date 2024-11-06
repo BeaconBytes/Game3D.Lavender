@@ -9,10 +9,14 @@ namespace Lavender.Common.Registers;
 
 public class ControlledEntityRegistry
 {
+    private readonly Dictionary<EntityType, ControllerType> _entries = new( );
+    
+    
     public void LoadDefaults()
     {
         Register(EntityType.Player, ControllerType.Player);
         Register(EntityType.PlayerSoul, ControllerType.PlayerSoul);
+        Register(EntityType.Buddy, ControllerType.Buddy);
     }
     
     public void Register( EntityType entityType, ControllerType controllerType )
@@ -32,5 +36,4 @@ public class ControlledEntityRegistry
         throw new Exception( $"Unknown entry EntityType.{entityType.ToString()} given." );
     }
 
-    private readonly Dictionary<EntityType, ControllerType> _entries = new( );
 }

@@ -14,9 +14,15 @@ public static class Register
         { "loadup_menu_selection", "res://Scenes/Core/MainMenus/loadup_menu_selection.tscn" },
         { "loadup_menu_join", "res://Scenes/Core/MainMenus/loadup_menu_join.tscn" },
         
-        { "map_default", "res://Scenes/Core/Maps/Flux/flux_map.tscn" },
+        { "map_default", "res://Scenes/Core/Maps/Kraken/kraken_map.tscn" },
         { "map_debug", "res://Scenes/Core/Maps/DEBUG/debug_map.tscn" },
     };
+
+    public static ControllerRegistry Controllers { get; } = new();
+    public static PacketRegistry Packets { get; } = new();
+    public static EntityRegistry Entities { get; } = new();
+    public static SceneRegistry Scenes { get; } = new();
+    public static ControlledEntityRegistry ControlledEntities { get; } = new();
 
     public static void LoadDefaults()
     {
@@ -26,10 +32,4 @@ public static class Register
         Entities.LoadDefaults();
         ControlledEntities.LoadDefaults();
     }
-
-    public static ControllerRegistry Controllers { get; } = new();
-    public static PacketRegistry Packets { get; } = new();
-    public static EntityRegistry Entities { get; } = new();
-    public static SceneRegistry Scenes { get; } = new();
-    public static ControlledEntityRegistry ControlledEntities { get; } = new();
 }

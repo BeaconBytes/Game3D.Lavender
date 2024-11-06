@@ -17,6 +17,21 @@ namespace Lavender.Common.Entity.GameEntities;
 
 public partial class LivingEntityBase : BasicEntityBase
 {
+    public uint GrabbedById { get; protected set; }
+
+    protected bool EnableAutoMoveSlide = false;
+
+    private bool _lastNavAgentCompleted = true;
+    
+    
+    // EVENT SIGNATURES //
+    public delegate void EntitySourceTargetEventHandler(IGameEntity source, IGameEntity target);
+
+    // EVENTS //
+    public event EntitySourceTargetEventHandler OnEntityGrabbedByEvent;
+    public event EntitySourceTargetEventHandler OnEntityReleasedByEvent;
+    
+    
     public override void Setup(uint netId, GameManager manager)
     {
         base.Setup(netId, manager);
@@ -299,25 +314,4 @@ public partial class LivingEntityBase : BasicEntityBase
         }
     }
     
-    
-    
-    
-    public uint GrabbedById { get; protected set; }
-
-    protected bool EnableAutoMoveSlide = false;
-
-    private bool _lastNavAgentCompleted = true;
-
-    
-    
-    
-    // EVENT HANDLERS //
-    
-    
-    // EVENT SIGNATURES //
-    public delegate void EntitySourceTargetEventHandler(IGameEntity source, IGameEntity target);
-
-    // EVENTS //
-    public event EntitySourceTargetEventHandler OnEntityGrabbedByEvent;
-    public event EntitySourceTargetEventHandler OnEntityReleasedByEvent;
 }

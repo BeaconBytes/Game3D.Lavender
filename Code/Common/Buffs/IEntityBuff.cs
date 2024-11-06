@@ -1,4 +1,4 @@
-namespace Lavender.Common.Entity.Buffs;
+namespace Lavender.Common.Buffs;
 
 public interface IEntityBuff
 {

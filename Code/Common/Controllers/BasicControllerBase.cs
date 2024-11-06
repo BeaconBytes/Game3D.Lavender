@@ -19,6 +19,47 @@ namespace Lavender.Common.Controllers;
 
 public partial class BasicControllerBase : Node, IController
 {
+    public uint NetId { get; private set; }
+    public string DisplayName { get; private set; }
+    public bool IsSetup => (Manager != null);
+    public bool IsClient { get; private set; }
+    public GameManager Manager { get; private set; }
+    public MapManager MapManager { get; private set; }
+
+    public IGameEntity ReceiverEntity { get; protected set; }
+
+    public bool Destroyed { get; private set; }
+    
+    
+    // Inputs
+    public Vector3 LookInput { get; protected set; }
+    public Vector3 MoveInput { get; protected set; }
+    public EntityMoveFlags MoveFlagsInput { get; protected set; }
+
+    // Network Syncing //
+    private Vector3 _lastSyncedPosition = Vector3.Zero;
+    private Vector3 _lastSyncedRotation = Vector3.Zero;
+    
+    private Vector3 _targetedLerpPosition = Vector3.Zero;
+    private Vector3 _targetedLerpRotation = Vector3.Zero;
+    
+    protected readonly Queue<InputPayload> InputQueue = new();
+    
+    protected StatePayload LatestServerState;
+    protected StatePayload LastProcessedState;
+    
+    protected readonly StatePayload[] StateBuffer = new StatePayload[GameManager.NET_BUFFER_SIZE];
+    protected readonly InputPayload[] InputBuffer= new InputPayload[GameManager.NET_BUFFER_SIZE];
+
+    public EntityMovementMode MovementMode { get; protected set; } = EntityMovementMode.Ground;
+    
+    
+    // EVENTS //
+    public event GameManager.SimpleNetNodeEventHandler DestroyedEvent;
+    public event GameManager.SourcedNetNodeEventHandler DetachReceiverEvent;
+    public event GameManager.SourcedNetNodeEventHandler AttachReceiverEvent;
+    
+    
     public virtual void Setup(uint netId, GameManager gameManager)
     {
         NetId = netId;
@@ -304,7 +345,7 @@ public partial class BasicControllerBase : Node, IController
     }
     
     /// <summary>
-    /// Sets the display name(includeing node-name and network name) to the given string.
+    /// Sets the display name(including node-name and network name) to the given string.
     /// </summary>
     public virtual void SetDisplayName(string name)
     {
@@ -328,44 +369,4 @@ public partial class BasicControllerBase : Node, IController
     {
         _targetedLerpPosition = ReceiverEntity.WorldPosition;
     }
-    
-    public uint NetId { get; private set; }
-    public string DisplayName { get; private set; }
-    public bool IsSetup => (Manager != null);
-    public bool IsClient { get; private set; }
-    public GameManager Manager { get; private set; }
-    public MapManager MapManager { get; private set; }
-
-    public IGameEntity ReceiverEntity { get; protected set; }
-
-    public bool Destroyed { get; private set; }
-    
-    
-    // Inputs
-    public Vector3 LookInput { get; protected set; }
-    public Vector3 MoveInput { get; protected set; }
-    public EntityMoveFlags MoveFlagsInput { get; protected set; }
-
-    // Network Syncing //
-    private Vector3 _lastSyncedPosition = Vector3.Zero;
-    private Vector3 _lastSyncedRotation = Vector3.Zero;
-    
-    private Vector3 _targetedLerpPosition = Vector3.Zero;
-    private Vector3 _targetedLerpRotation = Vector3.Zero;
-    
-    protected readonly Queue<InputPayload> InputQueue = new();
-    
-    protected StatePayload LatestServerState;
-    protected StatePayload LastProcessedState;
-    
-    protected readonly StatePayload[] StateBuffer = new StatePayload[GameManager.NET_BUFFER_SIZE];
-    protected readonly InputPayload[] InputBuffer= new InputPayload[GameManager.NET_BUFFER_SIZE];
-
-    public EntityMovementMode MovementMode { get; protected set; } = EntityMovementMode.Ground;
-    
-    
-    // EVENTS //
-    public event GameManager.SimpleNetNodeEventHandler DestroyedEvent;
-    public event GameManager.SourcedNetNodeEventHandler DetachReceiverEvent;
-    public event GameManager.SourcedNetNodeEventHandler AttachReceiverEvent;
 }

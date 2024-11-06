@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Godot;
+using Lavender.Common.Buffs;
 using Lavender.Common.Controllers;
-using Lavender.Common.Entity.Buffs;
 using Lavender.Common.Entity.Data;
 using Lavender.Common.Managers;
 

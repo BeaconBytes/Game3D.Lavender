@@ -7,6 +7,9 @@ namespace Lavender.Common.Registers;
 
 public class SceneRegistry
 {
+    private readonly Dictionary<string, PackedScene> _entries = new Dictionary<string, PackedScene>( );
+    
+    
     public void LoadDefaults()
     {
         
@@ -40,6 +43,4 @@ public class SceneRegistry
     {
         return _entries.Any(x => x.Key.Equals(resPath));
     }
-
-    readonly private Dictionary<string, PackedScene> _entries = new Dictionary<string, PackedScene>( );
 }

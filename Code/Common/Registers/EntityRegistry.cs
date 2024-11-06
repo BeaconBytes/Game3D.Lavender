@@ -5,6 +5,7 @@ using Godot;
 using Lavender.Common.Controllers;
 using Lavender.Common.Entity;
 using Lavender.Common.Entity.GameEntities;
+using Lavender.Common.Entity.GameEntities.Enemies;
 using Lavender.Common.Enums.Types;
 using PlayerEntity = Lavender.Common.Entity.GameEntities.PlayerEntity;
 
@@ -12,11 +13,16 @@ namespace Lavender.Common.Registers;
 
 public class EntityRegistry
 {
+    private readonly Dictionary<EntityType, Type> _entityEntries = new( );
+    private readonly Dictionary<EntityType, string> _resEntries = new( );
+    
+    
     public void LoadDefaults()
     {
         // Game Entities
         Register<PlayerEntity>(EntityType.Player,"res://Scenes/Core/Entities/Player/player_entity.tscn");
         Register<PlayerSoulEntity>(EntityType.PlayerSoul,"res://Scenes/Core/Entities/Player/player_soul_entity.tscn");
+        Register<BuddyEntity>(EntityType.Buddy, "res://Scenes/Core/Entities/Enemies/Buddy/buddy_enemy.tscn");
     }
     
     public void Register<TEntity>( EntityType entityType, string resPath ) where TEntity : IGameEntity
@@ -70,8 +76,4 @@ public class EntityRegistry
 
         return entityType;
     }
-    
-    
-    private readonly Dictionary<EntityType, Type> _entityEntries = new( );
-    private readonly Dictionary<EntityType, string> _resEntries = new( );
 }

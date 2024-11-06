@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using Godot;
 using Lavender.Client.Managers;
+using Lavender.Common.Buffs;
 using Lavender.Common.Controllers;
-using Lavender.Common.Entity.Buffs;
 using Lavender.Common.Entity.Data;
 using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
