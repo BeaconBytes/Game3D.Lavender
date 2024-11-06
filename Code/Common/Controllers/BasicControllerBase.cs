@@ -9,6 +9,7 @@ using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Items;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Managers;
+using Lavender.Common.Mapping;
 using Lavender.Common.Networking.Packets.Variants.Controller;
 using Lavender.Common.Networking.Packets.Variants.Entity;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
@@ -24,7 +25,7 @@ public partial class BasicControllerBase : Node, IController
     public bool IsSetup => (Manager != null);
     public bool IsClient { get; private set; }
     public GameManager Manager { get; private set; }
-    public MapManager MapManager { get; private set; }
+    public GameMap Map { get; private set; }
 
     public IGameEntity ReceiverEntity { get; protected set; }
 
@@ -64,7 +65,7 @@ public partial class BasicControllerBase : Node, IController
     {
         NetId = netId;
         Manager = gameManager;
-        MapManager = Manager.MapManager;
+        Map = Manager.CurrentMap;
         IsClient = Manager is ClientManager;
 
         AttachReceiverEvent += OnReceiverAttached;

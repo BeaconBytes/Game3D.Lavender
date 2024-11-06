@@ -47,7 +47,7 @@ public partial class PlayerController : BasicControllerBase
 	{
 		base.RespawnReceiver(notifyReceiver);
 		
-		Marker3D spawnPointSelected = MapManager.GetRandomPlayerSpawnPoint();
+		Marker3D spawnPointSelected = Map.GetRandomPlayerSpawnPoint();
 		ReceiverEntity.Teleport(spawnPointSelected.GlobalPosition, spawnPointSelected.GlobalRotation);
 
 		if (notifyReceiver && ReceiverEntity is PlayerEntity)

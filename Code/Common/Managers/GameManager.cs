@@ -9,6 +9,8 @@ using Lavender.Common.Entity.GameEntities;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Enums.Types;
 using Lavender.Common.Exceptions;
+using Lavender.Common.Harvestables;
+using Lavender.Common.Mapping;
 using Lavender.Common.Networking.Packets;
 using Lavender.Common.Networking.Packets.Variants.Controller;
 using Lavender.Common.Networking.Packets.Variants.Entity;
@@ -29,6 +31,67 @@ namespace Lavender.Common.Managers;
 /// </summary>
 public partial class GameManager : LoadableNode
 {
+    protected const string NETWORK_KEY = "LavendarKey787";
+
+    public const double SERVER_TICK_RATE = 30d;
+    public const double NET_TICK_TIME = 1d / SERVER_TICK_RATE;
+    public const int NET_BUFFER_SIZE = 1024;
+
+    private double _deltaTimer = 0;
+    public uint CurrentTick { get; private set; } = 0;
+    
+    public EnvManager EnvManager { get; private set; }
+
+    public bool IsClient { get; private set; } = false;
+    public bool IsServer { get; private set; } = false;
+    public bool IsDualManager { get; protected set; } = true;
+    public bool IsDualManagerConnected { get; protected set; } = true;
+    public bool IsDebugMode { get; protected set; } = false;
+
+    protected readonly Dictionary<uint, INetNode> SpawnedNodes = new();
+    
+    protected readonly Dictionary<uint, IHarvestableNode> HarvestableNodes = new();
+    
+    protected readonly Dictionary<uint, IGameEntity> SpawnedEntities = new();
+    protected readonly Dictionary<uint, IController> SpawnedControllers = new();
+    protected readonly Dictionary<uint, IController> TickingControllers = new();
+    protected readonly Dictionary<uint, PlayerController> SpawnedPlayerControllers = new();
+    
+    protected readonly Dictionary<NetPeer, uint> PlayerPeers = new();
+
+    private readonly NetDataWriter _netWriterCached = new();
+    protected readonly EventBasedNetListener _netListener = new();
+    protected NetManager _netManager;
+    
+    // The NetPeer of the Server(for client-side)
+    public NetPeer ServerPeer { get; protected set; }
+    public uint ClientNetId { get; protected set; } = (uint)StaticNetId.Null;
+    public PlayerController ClientController { get; protected set; }
+    
+    [Export]
+    protected Node MapSocketNode;
+    [Export]
+    protected Node CurrentMapRootNode;
+    public GameMap CurrentMap { get; protected set; }
+    public PathManager PathManager { get; protected set; }
+
+    public bool TickingDisabled { get; protected set; } = true;
+    
+    public string DefaultMapName { get; protected set; } = "default";
+
+    private bool _isFirstTick = true;
+
+
+    // EVENT SIGNATURES //
+    public delegate void SimpleNetNodeEventHandler(INetNode target);
+    public delegate void SourcedNetNodeEventHandler(INetNode source, INetNode target);
+    
+    
+    // EVENTS //
+    public event SimpleNetNodeEventHandler NodeSpawnedEvent;
+    public event SimpleNetNodeEventHandler NodeDestroyedEvent;
+    
+    
     protected virtual void ApplyRegistryDefaults()
     {
         
@@ -160,7 +223,7 @@ public partial class GameManager : LoadableNode
         CurrentMapRootNode = newScene.Instantiate<Node>();
         MapSocketNode.AddChild(CurrentMapRootNode);
 
-        MapManager = (MapManager)CurrentMapRootNode;
+        CurrentMap = (GameMap)CurrentMapRootNode;
     }
     
     /// <summary>
@@ -256,7 +319,7 @@ public partial class GameManager : LoadableNode
             spawnedNetId = GenerateNetId();
         }
         
-        while (SpawnedNodes.ContainsKey(spawnedNetId))
+        while (CheckNetIdExists(spawnedNetId))
         {
             spawnedNetId = GenerateNetId();
         }
@@ -300,7 +363,7 @@ public partial class GameManager : LoadableNode
             spawnedNetId = GenerateNetId();
         }
         
-        while (SpawnedNodes.ContainsKey(spawnedNetId))
+        while (CheckNetIdExists(spawnedNetId))
         {
             spawnedNetId = GenerateNetId();
         }
@@ -344,7 +407,7 @@ public partial class GameManager : LoadableNode
         {
             spawnedNetId = GenerateNetId();
         }
-        while (SpawnedNodes.ContainsKey(spawnedNetId))
+        while (CheckNetIdExists(spawnedNetId))
         {
             spawnedNetId = GenerateNetId();
         }
@@ -480,7 +543,6 @@ public partial class GameManager : LoadableNode
     /// <summary>
     /// Generates a random NetId with 0 reserved as null, and 1 reserved as server
     /// </summary>
-    /// <returns></returns>
     public uint GenerateNetId( )
     {
         return ( GD.Randi( ) % ( uint.MaxValue - 2 ) ) + 2;
@@ -532,6 +594,28 @@ public partial class GameManager : LoadableNode
         return IsServer ? PlayerPeers.Count : SpawnedPlayerControllers.Count;
     }
 
+    public bool CheckNetIdExists(uint netId)
+    {
+        return HarvestableNodes.ContainsKey(netId) || SpawnedNodes.ContainsKey(netId) || (netId <= (uint)StaticNetId.Server);
+    }
+    
+    /// <summary>
+    /// Generates a new NetId and registers a harvestable node to the
+    /// game manager for replication.
+    /// </summary>
+    public void SetupHarvestable(IHarvestableNode harvestableNode)
+    {
+        uint netId = GenerateNetId();
+        while (CheckNetIdExists(netId))
+        {
+            netId = GenerateNetId();
+        }
+
+        harvestableNode.Setup(netId, CurrentMap);
+        
+        HarvestableNodes.Add(netId, harvestableNode);
+    }
+
     public virtual void BroadcastNotification(string message, float showTime = 4f) { }
     
     
@@ -544,62 +628,4 @@ public partial class GameManager : LoadableNode
         DestroyNode(netNode);
     }
     
-    
-
-    protected const string NETWORK_KEY = "LavendarKey787";
-
-    public const double SERVER_TICK_RATE = 30d;
-    public const double NET_TICK_TIME = 1d / SERVER_TICK_RATE;
-    public const int NET_BUFFER_SIZE = 1024;
-
-    private double _deltaTimer = 0;
-    public uint CurrentTick { get; private set; } = 0;
-    
-    public EnvManager EnvManager { get; private set; }
-
-    public bool IsClient { get; private set; } = false;
-    public bool IsServer { get; private set; } = false;
-    public bool IsDualManager { get; protected set; } = true;
-    public bool IsDualManagerConnected { get; protected set; } = true;
-    public bool IsDebugMode { get; protected set; } = false;
-
-    protected readonly Dictionary<uint, INetNode> SpawnedNodes = new();
-    protected readonly Dictionary<uint, IGameEntity> SpawnedEntities = new();
-    protected readonly Dictionary<uint, IController> SpawnedControllers = new();
-    protected readonly Dictionary<uint, IController> TickingControllers = new();
-    protected readonly Dictionary<uint, PlayerController> SpawnedPlayerControllers = new();
-    
-    protected readonly Dictionary<NetPeer, uint> PlayerPeers = new();
-
-    private readonly NetDataWriter _netWriterCached = new();
-    protected readonly EventBasedNetListener _netListener = new();
-    protected NetManager _netManager;
-    
-    // The NetPeer of the Server(for client-side)
-    public NetPeer ServerPeer { get; protected set; }
-    public uint ClientNetId { get; protected set; } = (uint)StaticNetId.Null;
-    public PlayerController ClientController { get; protected set; }
-    
-    [Export]
-    protected Node MapSocketNode;
-    [Export]
-    protected Node CurrentMapRootNode;
-    public MapManager MapManager { get; protected set; }
-    public PathManager PathManager { get; protected set; }
-
-    public bool TickingDisabled { get; protected set; } = true;
-    
-    public string DefaultMapName { get; protected set; } = "default";
-
-    private bool _isFirstTick = true;
-
-
-    // EVENT SIGNATURES //
-    public delegate void SimpleNetNodeEventHandler(INetNode target);
-    public delegate void SourcedNetNodeEventHandler(INetNode source, INetNode target);
-    
-    
-    // EVENTS //
-    public event SimpleNetNodeEventHandler NodeSpawnedEvent;
-    public event SimpleNetNodeEventHandler NodeDestroyedEvent;
 }

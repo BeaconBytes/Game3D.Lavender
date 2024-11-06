@@ -103,7 +103,7 @@ public partial class ServerManager : GameManager
 	private void OnNetPeerConnected(NetPeer peer)
 	{
 		uint clientNetId = GenerateNetId();
-		while (SpawnedEntities.ContainsKey(clientNetId))
+		while (CheckNetIdExists(clientNetId))
 		{
 			clientNetId = GenerateNetId();
 		}

@@ -9,6 +9,7 @@ using Lavender.Common.Enums.Entity;
 using Lavender.Common.Enums.Net;
 using Lavender.Common.Exceptions;
 using Lavender.Common.Managers;
+using Lavender.Common.Mapping;
 using Lavender.Common.Networking.Packets.Variants.Entity;
 using Lavender.Common.Networking.Packets.Variants.Entity.Movement;
 using Lavender.Common.Registers;
@@ -20,8 +21,75 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
 {
     private float _speed = 5.0f;
     private float _jumpVelocity = 4.5f;
-
+    
     protected float GravityVal = ProjectSettings.GetSetting("physics/3d/default_gravity").AsSingle();
+
+    public GameManager Manager { get; private set; } = null;
+    public GameMap Map { get; private set; } = null;
+    public string DisplayName { get; private set; }
+    
+    public bool IsClient { get; private set; }
+
+    public bool Dead { get; private set; }
+
+    public bool IsSetup => (Manager != null);
+
+    public bool Destroyed { get; private set; } = false;
+
+    public bool Enabled { get; set; } = true;
+
+    public EntityStats Stats { get; protected set; }
+
+    public List<IController> AttachedControllers { get; private set; } = new();
+    public List<IEntityBuff> AppliedBuffs { get; } = new();
+
+    public List<IEntityBuff> TickingAppliedBuffs { get; } = new();
+    
+    
+    
+    public bool IsControlsFrozen
+    {
+        get => _isControlsFrozenVal;
+        set
+        {
+            _isControlsFrozenVal = value;
+            TriggerValueChangedEvent( EntityValueChangedType.ControlsFrozen);
+        }
+    }
+    private bool _isControlsFrozenVal = true;
+
+
+    [Export]
+    public NavigationAgent3D NavAgent { get; protected set; }
+    
+    [Export]
+    private RayCast3D _raycast3D;
+    public RayCast3D ActiveRaycast3D
+    {
+        get
+        {
+            return _raycast3D;
+        }
+    }
+    
+    /// <summary>
+    /// An array of things we should hide if this entity is set to being controlled by this client(Models, Particles, etc.)
+    /// </summary>
+    [Export]
+    protected Godot.Collections.Array<Node> ServerHiddenNodes;
+
+    // EVENT SIGNATURES //
+    public delegate void EntityDestroyEventHandler(IGameEntity sourceEntity);
+
+    public delegate void EntityTeleportedEventHandler(IGameEntity sourceEntity);
+    public delegate void EntityValueChangedHandler(BasicEntityBase entity, EntityValueChangedType type);
+    
+    
+    // EVENTS //
+    public event EntityDestroyEventHandler DestroyedEvent;
+    public event EntityTeleportedEventHandler TeleportedEvent;
+    public event EntityValueChangedHandler OnValueChangedEvent;
+    public event GameManager.SimpleNetNodeEventHandler OnCompletedNavPathEvent;
 
     public virtual void Setup(uint netId, GameManager manager)
     {
@@ -32,9 +100,9 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         ChangeCollisionEnabled(true);
         RecalculateVisibility();
         
-        MapManager = Manager.MapManager;
+        Map = Manager.CurrentMap;
 
-        SetDisplayName("");
+        // SetDisplayName("");
 
         if (IsClient)
         {
@@ -314,71 +382,5 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         DisplayName = sanitizedName;
         Name = $"{sanitizedName}[#{NetId}]";
     }
-    public GameManager Manager { get; private set; } = null;
-    public MapManager MapManager { get; private set; } = null;
-    public string DisplayName { get; private set; }
     
-    public bool IsClient { get; private set; }
-
-    public bool Dead { get; private set; }
-
-    public bool IsSetup => (Manager != null);
-
-    public bool Destroyed { get; private set; } = false;
-
-    public bool Enabled { get; set; } = true;
-
-    public EntityStats Stats { get; protected set; }
-
-    public List<IController> AttachedControllers { get; private set; } = new();
-    public List<IEntityBuff> AppliedBuffs { get; } = new();
-
-    public List<IEntityBuff> TickingAppliedBuffs { get; } = new();
-    
-    
-    
-    public bool IsControlsFrozen
-    {
-        get => _isControlsFrozenVal;
-        set
-        {
-            _isControlsFrozenVal = value;
-            TriggerValueChangedEvent( EntityValueChangedType.ControlsFrozen);
-        }
-    }
-    private bool _isControlsFrozenVal = true;
-
-
-    [Export]
-    public NavigationAgent3D NavAgent { get; protected set; }
-    
-    [Export]
-    private RayCast3D _raycast3D;
-    public RayCast3D ActiveRaycast3D
-    {
-        get
-        {
-            return _raycast3D;
-        }
-    }
-
-
-    /// <summary>
-    /// An array of things we should hide if this entity is set to being controlled by this client(Models, Particles, etc.)
-    /// </summary>
-    [Export]
-    protected Godot.Collections.Array<Node> ServerHiddenNodes;
-
-    // EVENT SIGNATURES //
-    public delegate void EntityDestroyEventHandler(IGameEntity sourceEntity);
-
-    public delegate void EntityTeleportedEventHandler(IGameEntity sourceEntity);
-    public delegate void EntityValueChangedHandler(BasicEntityBase entity, EntityValueChangedType type);
-    
-    
-    // EVENTS //
-    public event EntityDestroyEventHandler DestroyedEvent;
-    public event EntityTeleportedEventHandler TeleportedEvent;
-    public event EntityValueChangedHandler OnValueChangedEvent;
-    public event GameManager.SimpleNetNodeEventHandler OnCompletedNavPathEvent;
 }
