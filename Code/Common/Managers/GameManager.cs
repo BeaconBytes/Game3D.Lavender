@@ -228,7 +228,7 @@ public partial class GameManager : LoadableNode
     
     /// <summary>
     /// Initializes a given player to sync them with the current world state on their initial join
-    /// </summary>
+    /// </summar1y>
     public void InitPlayerController(PlayerController playerController)
     {
         if (IsClient)

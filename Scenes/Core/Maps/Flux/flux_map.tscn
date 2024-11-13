@@ -1,6 +1,5 @@
-[gd_scene load_steps=7 format=3 uid="uid://dc1xbwc3qoy6i"]
+[gd_scene load_steps=6 format=3 uid="uid://dc1xbwc3qoy6i"]
 
-[ext_resource type="Script" path="res://Code/Common/Managers/Map/FluxMapManager.cs" id="1_62tbc"]
 [ext_resource type="Texture2D" uid="uid://dv1f2yk8nrpu" path="res://addons/kenney_prototype_textures/dark/texture_09.png" id="1_otjnn"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_vf015"]
@@ -24,9 +23,7 @@ glow_enabled = true
 albedo_texture = ExtResource("1_otjnn")
 uv1_triplanar = true
 
-[node name="FluxMap" type="Node3D" node_paths=PackedStringArray("_playerSpawnPoints")]
-script = ExtResource("1_62tbc")
-_playerSpawnPoints = [NodePath("SpawnPoints/Marker3D"), NodePath("SpawnPoints/Marker3D2"), NodePath("SpawnPoints/Marker3D3"), NodePath("SpawnPoints/Marker3D4"), NodePath("SpawnPoints/Marker3D5"), NodePath("SpawnPoints/Marker3D6"), NodePath("SpawnPoints/Marker3D7")]
+[node name="FluxMap" type="Node3D"]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_k0nsi")

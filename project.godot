@@ -27,7 +27,7 @@ project/assembly_name="Lavender"
 
 [editor_plugins]
 
-enabled=PackedStringArray()
+enabled=PackedStringArray("res://addons/terrain_3d/plugin.cfg")
 
 [input]
 
