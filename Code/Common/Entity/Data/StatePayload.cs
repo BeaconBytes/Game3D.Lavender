@@ -2,7 +2,7 @@
 
 namespace Lavender.Common.Entity.Data;
 
-public struct StatePayload
+public record struct StatePayload
 {
     public uint tick;
     public Vector3 position;

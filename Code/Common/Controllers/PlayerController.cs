@@ -39,8 +39,6 @@ public partial class PlayerController : BasicControllerBase
 		{
 			Register.Packets.Subscribe<AcknowledgePacket>(OnAcknowledgePacket);
 		}
-		
-		Input.MouseMode = Input.MouseModeEnum.Captured;
 	}
 
 	public override void RespawnReceiver(bool notifyReceiver = false)
@@ -52,7 +50,7 @@ public partial class PlayerController : BasicControllerBase
 
 		if (notifyReceiver && ReceiverEntity is PlayerEntity)
 		{
-			ShowNotification("Respawning...", 2);
+			ShowNotification("Respawning...", 2f);
 		}
 
 		ReceiverEntity.IsControlsFrozen = false;
@@ -94,7 +92,7 @@ public partial class PlayerController : BasicControllerBase
 	{
 		base._Process(delta);
 		
-		if (Manager.IsServer || Manager.ClientNetId != NetId)
+		if (!IsClient || Manager.ClientNetId != NetId)
 			return;
 		
 		ReadMovementInputs();
@@ -108,6 +106,9 @@ public partial class PlayerController : BasicControllerBase
 	}
 	protected virtual void ReadMovementInputs()
 	{
+		if (!IsClient)
+			return;
+		
 		Vector3 tmpMoveInput = Vector3.Zero;
 		
 		if (Input.IsActionPressed("move_forward"))

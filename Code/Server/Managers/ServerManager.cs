@@ -136,20 +136,20 @@ public partial class ServerManager : GameManager
 	{
 		string name = StringUtils.Sanitize(packet.Username, 16, false);
 		
-		PlayerController playerController = SpawnBundledEntity<PlayerSoulController>(EntityType.PlayerSoul, sourceNetId);
+		PlayerController playerController = SpawnBundledEntity<PlayerController>(EntityType.Player, sourceNetId);
 		playerController.SetDisplayName(name);
 	}
-	private void OnDebugActionPacket(DebugActionPacket packet, uint sourceNetId)
-	{
-		if (packet.Message.ToLower().Equals("debug"))
-		{
-			if (packet.Augment == 0)
-			{
-				// Debug button pressed?
-			}
-		}
-		
-	}
+	// private void OnDebugActionPacket(DebugActionPacket packet, uint sourceNetId)
+	// {
+	// 	if (packet.Message.ToLower().Equals("debug"))
+	// 	{
+	// 		if (packet.Augment == 0)
+	// 		{
+	// 			// Debug button pressed?
+	// 		}
+	// 	}
+	// 	
+	// }
 	
 	
 

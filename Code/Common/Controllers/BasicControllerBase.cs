@@ -112,7 +112,7 @@ public partial class BasicControllerBase : Node, IController
                     if (ReceiverEntity is not LivingEntityBase livingEntity)
                         return;
                     
-                    if (!LatestServerState.Equals(default(StatePayload)) && (LastProcessedState.Equals(default(StatePayload)) || !LatestServerState.Equals(LastProcessedState)))
+                    if (!LatestServerState.Equals(default) && (LastProcessedState.Equals(default) || !LatestServerState.Equals(LastProcessedState)))
                     {
                         HandleServerReconciliation();
                     }

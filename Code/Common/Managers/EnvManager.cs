@@ -165,7 +165,7 @@ public partial class EnvManager : Node
     public void JoinSinglePlayer()
     {
         ClientTargetIp = "localhost";
-        ClientTargetPort = 9218;
+        ClientTargetPort = ServerPort;
         ServerPort = ClientTargetPort;
         IsDualManagers = true;
         IsSinglePlayer = true;

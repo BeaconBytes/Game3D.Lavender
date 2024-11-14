@@ -116,11 +116,11 @@ public partial class LivingEntityBase : BasicEntityBase
 
         double gravityVector = vel.Y;
         
-        if (IsOnFloor() && GetMasterController()?.MovementMode is EntityMovementMode.Ground)
+        if (GetMasterController()?.MovementMode is EntityMovementMode.Flight)
         {
             gravityVector = 0f;
         }
-        else if(GetMasterController()?.MovementMode is EntityMovementMode.Ground)
+        else if(!IsOnFloor())
         {
             gravityVector -= GravityVal * delta;
         }
@@ -134,8 +134,10 @@ public partial class LivingEntityBase : BasicEntityBase
             vel = vel.MoveToward(moveInput * speed, Stats.MovementAcceleration * (float)delta);
         }
 
-        vel.Y = (float)gravityVector;
         vel.Y = Mathf.Lerp(vel.Y, moveInput.Y * speed, Stats.MovementAcceleration * (float)delta); 
+        
+        if (GetMasterController().MovementMode is EntityMovementMode.Ground)
+            vel.Y = (float)gravityVector;
         
         if (moveFlags.HasFlag(EntityMoveFlags.Jump) && IsOnFloor() && GetMasterController().MovementMode is EntityMovementMode.Ground)
         {
@@ -268,6 +270,9 @@ public partial class LivingEntityBase : BasicEntityBase
         if (packet.NetId != NetId || sourceNetId != (uint)StaticNetId.Server)
             return;
 
+        if(Manager.IsDebugMode)
+            GD.Print($"[OnValueChangedPacked]({packet.ValueType.ToString()}): '{packet.NewValue}'");
+        
         if (packet.ValueType is EntityValueChangedType.ControlsFrozen)
         {
             IsControlsFrozen = Mathf.IsEqualApprox(packet.NewValue, 1.0f);
@@ -302,7 +307,11 @@ public partial class LivingEntityBase : BasicEntityBase
                 singleValue = (livingEntity.IsControlsFrozen ? 1.0f : -1.0f);
             }
             else
+            {
+                if(Manager.IsDebugMode)
+                    GD.Print($"LivingEntityBase#OnValueChanged(): Unknown EntityValueChangedType of '{type.ToString()}'");
                 return;
+            }
             
             
             Manager.BroadcastPacketToClientsOrdered(new EntityValueChangedPacket()

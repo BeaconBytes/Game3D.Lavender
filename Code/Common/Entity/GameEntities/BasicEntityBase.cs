@@ -248,7 +248,8 @@ public partial class BasicEntityBase : CharacterBody3D, IGameEntity
         if (controller is null)
             throw new Exception("Invalid Master Controller given: null");
         
-        GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Set MasterController on Entity[{NetId}] to Controller[{controller.NetId}]");
+        if(Manager.IsDebugMode)
+            GD.Print($"[{(IsClient ? "CLIENT" : "SERVER")}] Set MasterController on Entity[{NetId}] to Controller[{controller.NetId}]");
 
         if (!AttachedControllers.Contains(controller))
         {
